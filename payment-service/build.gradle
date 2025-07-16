@@ -2,7 +2,6 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'org.flywaydb.flyway' version '10.10.0'
 }
 
 group = 'com.pipay'
@@ -32,13 +31,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-    implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'io.projectreactor.kafka:reactor-kafka'
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-database-postgresql'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
@@ -53,12 +48,3 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-// Flyway configuration
-flyway {
-	url = 'jdbc:postgresql://127.0.0.1:5432/payment_platform'
-	user = 'payment_user'
-	password = 'payment_password'
-	locations = ['classpath:db/migration']
-	baselineOnMigrate = true
-	baselineVersion = '0'
-}

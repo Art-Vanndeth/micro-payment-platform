@@ -1,10 +1,10 @@
-package com.pipay.payment.service.external;
+package com.pipay.payment.integration.accountservice.helper;
 
 import com.pipay.payment.dto.BalanceCheckResponse;
-import com.pipay.payment.integration.accountservice.endpoint.AccountEndpoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -12,16 +12,16 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import static com.pipay.payment.integration.accountservice.endpoint.AccountEndpoint.CHECK_BALANCE;
+import static com.pipay.payment.integration.accountservice.constant.AccountEndpoint.CHECK_BALANCE;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AccountServiceClient {
+public class AccountServiceHelper {
 
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient webClient;
 
-    @Value("${account-service.url}")
+    @Value("${integration.account-service.url}")
     private String accountServiceUrl;
 
     public Mono<BalanceCheckResponse> checkBalance(String accountId, BigDecimal amount) {
@@ -30,13 +30,11 @@ public class AccountServiceClient {
         // Wrap amount in a map to match the expected JSON structure {"amount": value}
         Map<String, BigDecimal> requestBody = Map.of("amount", amount);
 
-        return webClientBuilder.build()
-                .post()
-                .uri(accountServiceUrl + accountId + CHECK_BALANCE)
+        return webClient.post()
+                .uri(accountServiceUrl + "/" + accountId + CHECK_BALANCE)
+                .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(BalanceCheckResponse.class)
-                .doOnSuccess(response -> log.debug("Account service response: {}", response))
-                .doOnError(error -> log.error("Error calling account service: {}", error.getMessage()));
+                .bodyToMono(BalanceCheckResponse.class);
     }
 }

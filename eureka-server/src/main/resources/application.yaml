@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: eureka-server
+
+server:
+  port: 8887
+
+eureka:
+  instance:
+    hostname: localhost
+    preferIpAddress: true
+    secure-port-enabled: true
+    secure-port: 443
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8887/eureka/

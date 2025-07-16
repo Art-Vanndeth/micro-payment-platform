@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: api-gateway
+
+  profiles:
+    active: dev
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      uri: http://127.0.0.1:8889
+
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+              lower-case-service-id: true
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Request-Headers
+            - SaveSession
+          routes:
+            - id: identity # Register Identity Service
+              uri: http://127.0.0.1:9090
+              predicates:
+                - Path=/account/**
+              filters:
+                - RewritePath=/account/(?<segment>.*),/$\{segment}
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://127.0.0.1:8887/eureka/
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: INFO
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.web.server.adapter.HttpWebHandlerAdapter: TRACE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    gateway:
+      access: none
+    health:
+      probes:
+        enabled: true
+      show-details: always
+
+server:
+  port: 8888

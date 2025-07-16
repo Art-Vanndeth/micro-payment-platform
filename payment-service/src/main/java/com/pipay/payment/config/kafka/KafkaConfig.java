@@ -1,4 +1,4 @@
-package com.pipay.payment.config;
+package com.pipay.payment.config.kafka;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Configuration("paymentKafkaConfig")
 public class KafkaConfig {
 
-    @Value("${spring.kafka.bootstrap-servers:localhost:29092}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     @Bean("paymentReactiveKafkaProducerTemplate")

@@ -23,11 +23,11 @@ public class PaymentController {
      */
     @PostMapping("/process")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public Mono<PaymentResponse> processPayment(@Valid @RequestBody PaymentRequest request) {
+    public Mono<PaymentResponse> payment(@Valid @RequestBody PaymentRequest request) {
         log.info("Received payment request for account: {} amount: {} {}",
                 request.getAccountId(), request.getAmount(), request.getCurrency());
 
-        return paymentService.processPayment(request)
+        return paymentService.payment(request)
                 .doOnSuccess(response -> log.info("Payment processing completed: {}", response.getPaymentId()))
                 .doOnError(error -> log.error("Payment processing failed: {}", error.getMessage()));
     }

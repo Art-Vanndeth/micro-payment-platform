@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: config-server
+
+  profiles:
+    active: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Art-Vanndeth/micro-payment-platform-configuration.git
+          search-paths: '/services/**'
+          default-label: main
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://127.0.0.1:8887/eureka/
+
+server:
+  port: 8889

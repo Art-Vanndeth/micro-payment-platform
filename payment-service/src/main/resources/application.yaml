@@ -38,4 +38,5 @@ management:
 
 kafka:
   topics:
-    payment-events: payment-created-events
+    payment-created-events: payment-created-events
+    payment-events: payment-events

@@ -11,7 +11,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -26,6 +29,7 @@ import java.util.Map;
 @Document(collection = "transactions")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Transaction {
+
     @Id
     private String transactionId;
 
@@ -34,7 +38,7 @@ public class Transaction {
     private String paymentId;
 
     @NotNull
-    @NotBlank
+    @Indexed
     private String fromAccountId;
 
     @NotNull
@@ -57,8 +61,10 @@ public class Transaction {
 
     private String description;
 
+    @CreatedDate
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
     private LocalDateTime completedAt;

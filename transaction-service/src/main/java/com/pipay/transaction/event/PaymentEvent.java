@@ -1,8 +1,6 @@
 package com.pipay.transaction.event;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.pipay.transaction.constant.TransactionStatus;
-import com.pipay.transaction.constant.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,17 +14,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransactionEvent {
-    private String transactionId;
+public class PaymentEvent {
     private String paymentId;
-    private String fromAccountId;
-    private String toAccountId;
+    private String accountId;
+    private String recipientAccountId;
     private BigDecimal amount;
     private String currency;
-    private TransactionType transactionType;
-    private TransactionStatus status;
+    private String paymentMethod;
+    private String status;
     private String description;
+    private String reference;
+    private String transactionReference;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String eventType; // TRANSACTION_CREATED, TRANSACTION_COMPLETED, etc.
+    private String eventType; // PAYMENT_CREATED, PAYMENT_COMPLETED, etc.
 }

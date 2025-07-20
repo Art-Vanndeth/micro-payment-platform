@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/account-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/account-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/payment-provider-platform.iml" filepath="$PROJECT_DIR$/.idea/payment-provider-platform.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/payment-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/payment-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/transaction-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/transaction-service.main.iml" />
     </modules>
   </component>
 </project>

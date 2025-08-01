@@ -60,6 +60,8 @@ public class Transaction {
     private TransactionStatus status;
 
     private String description;
+    private String reference;
+    private String transactionReference;
 
     @CreatedDate
     private LocalDateTime createdAt;

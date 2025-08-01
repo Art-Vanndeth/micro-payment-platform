@@ -30,79 +30,106 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final AccountService accountService;
+    private final CorePaymentService corePaymentService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public Mono<PaymentResponse> payment(PaymentRequest request) {
-        return accountService.checkBalance(request.getAccountId(), request.getAmount())
-                .flatMap(response -> {
-                    log.info("Checking balance for account: {}", response);
-                    if (response.isSufficientFunds()) {
-                        // Create payment entity
-                        String paymentId = UUID.randomUUID().toString();
-                        String transactionReference = "TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        log.info("Processing payment request from {} to {} for amount: {}",
+                request.getAccountId(), request.getRecipientAccountId(), request.getAmount());
 
-                        Payment payment = Payment.builder()
-                                .paymentId(paymentId)
-                                .accountId(request.getAccountId())
-                                .recipientAccountId(request.getRecipientAccountId())
-                                .amount(request.getAmount())
-                                .currency(request.getCurrency())
-                                .paymentMethod(request.getPaymentMethod())
-                                .status(PaymentStatus.PENDING)
-                                .description(request.getDescription())
-                                .reference(request.getReference())
-                                .transactionReference(transactionReference)
-                                .createdAt(LocalDateTime.now())
-                                .updatedAt(LocalDateTime.now())
-                                // Don't set version for new entities - R2DBC will handle it
-                                .build();
+        // First validate both source and recipient accounts
+        return corePaymentService.validatePaymentAccounts(
+                request.getAccountId(),
+                request.getRecipientAccountId(),
+                request.getAmount())
+                .then(Mono.defer(() -> {
+                    // Create payment entity
+                    String paymentId = UUID.randomUUID().toString();
+                    String transactionReference = "TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-                        // Save payment to database
-                        return paymentRepository.save(payment)
-                                .doOnSuccess(savedPayment -> {
-                                    log.info("Payment saved successfully with ID: {}", savedPayment.getPaymentId());
+                    Payment payment = Payment.builder()
+                            .paymentId(paymentId)
+                            .accountId(request.getAccountId())
+                            .recipientAccountId(request.getRecipientAccountId())
+                            .amount(request.getAmount())
+                            .currency(request.getCurrency())
+                            .paymentMethod(request.getPaymentMethod())
+                            .status(PaymentStatus.PENDING)
+                            .description(request.getDescription())
+                            .reference(request.getReference())
+                            .transactionReference(transactionReference)
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
+                            .build();
 
-                                    // Create and send payment created event to Kafka
-                                    PaymentCreatedEvent paymentCreatedEvent = PaymentCreatedEvent.builder()
-                                            .paymentId(savedPayment.getPaymentId())
-                                            .accountId(savedPayment.getAccountId())
-                                            .recipientAccountId(savedPayment.getRecipientAccountId())
-                                            .amount(savedPayment.getAmount())
-                                            .currency(savedPayment.getCurrency())
-                                            .paymentMethod(savedPayment.getPaymentMethod().toString())
-                                            .status(savedPayment.getStatus().toString())
-                                            .description(savedPayment.getDescription())
-                                            .reference(savedPayment.getReference())
-                                            .transactionReference(savedPayment.getTransactionReference())
-                                            .createdAt(savedPayment.getCreatedAt())
-                                            .eventType("PAYMENT_CREATED")
-                                            .build();
+                    // Save payment to database first
+                    return paymentRepository.save(payment)
+                            .flatMap(savedPayment -> {
+                                log.info("Payment saved with ID: {}, now processing account deduction", savedPayment.getPaymentId());
 
-                                    kafkaTemplate.send(paymentCreatedTopic, paymentCreatedEvent);
-                                    log.info("Payment created event published to Kafka: {}", savedPayment.getPaymentId());
-                                })
-                                .map(savedPayment -> PaymentResponse.builder()
-                                        .paymentId(savedPayment.getPaymentId())
-                                        .accountId(savedPayment.getAccountId())
-                                        .recipientAccountId(savedPayment.getRecipientAccountId())
-                                        .amount(savedPayment.getAmount())
-                                        .currency(savedPayment.getCurrency())
-                                        .paymentMethod(savedPayment.getPaymentMethod())
-                                        .status(savedPayment.getStatus())
-                                        .description(savedPayment.getDescription())
-                                        .reference(savedPayment.getReference())
-                                        .transactionReference(savedPayment.getTransactionReference())
-                                        .gatewayResponse(savedPayment.getGatewayResponse())
-                                        .createdAt(savedPayment.getCreatedAt())
-                                        .updatedAt(savedPayment.getUpdatedAt())
-                                        .message("Payment initiated successfully")
-                                        .build())
-                                .doOnError(error -> log.error("Error saving payment: {}", error.getMessage()));
-                    } else {
-                        return Mono.error(new CustomException(INVALID_PARTICIPANT_CODE));
-                    }
-                });
+                                // Process account deduction through core service
+                                return corePaymentService.processAccountDeduction(
+                                        savedPayment.getAccountId(),
+                                        savedPayment.getRecipientAccountId(),
+                                        savedPayment.getAmount())
+                                        .flatMap(deductionSuccess -> {
+                                            if (deductionSuccess) {
+                                                // Update payment status to COMPLETED
+                                                savedPayment.setStatus(PaymentStatus.COMPLETED);
+                                                savedPayment.setUpdatedAt(LocalDateTime.now());
+
+                                                return paymentRepository.save(savedPayment)
+                                                        .doOnSuccess(completedPayment -> {
+                                                            log.info("Payment completed successfully with ID: {}", completedPayment.getPaymentId());
+
+                                                            // Create and send payment created event to Kafka
+                                                            PaymentCreatedEvent paymentCreatedEvent = PaymentCreatedEvent.builder()
+                                                                    .paymentId(completedPayment.getPaymentId())
+                                                                    .accountId(completedPayment.getAccountId())
+                                                                    .recipientAccountId(completedPayment.getRecipientAccountId())
+                                                                    .amount(completedPayment.getAmount())
+                                                                    .currency(completedPayment.getCurrency())
+                                                                    .paymentMethod(completedPayment.getPaymentMethod().toString())
+                                                                    .status(completedPayment.getStatus().toString())
+                                                                    .description(completedPayment.getDescription())
+                                                                    .reference(completedPayment.getReference())
+                                                                    .transactionReference(completedPayment.getTransactionReference())
+                                                                    .createdAt(completedPayment.getCreatedAt())
+                                                                    .eventType("PAYMENT_COMPLETED")
+                                                                    .build();
+
+                                                            kafkaTemplate.send(paymentCreatedTopic, paymentCreatedEvent);
+                                                            log.info("Payment completed event published to Kafka: {}", completedPayment.getPaymentId());
+                                                        });
+                                            } else {
+                                                // Update payment status to FAILED
+                                                savedPayment.setStatus(PaymentStatus.FAILED);
+                                                savedPayment.setUpdatedAt(LocalDateTime.now());
+
+                                                return paymentRepository.save(savedPayment)
+                                                        .then(Mono.error(new CustomException(INVALID_PARTICIPANT_CODE)));
+                                            }
+                                        });
+                            })
+                            .map(finalPayment -> PaymentResponse.builder()
+                                    .paymentId(finalPayment.getPaymentId())
+                                    .accountId(finalPayment.getAccountId())
+                                    .recipientAccountId(finalPayment.getRecipientAccountId())
+                                    .amount(finalPayment.getAmount())
+                                    .currency(finalPayment.getCurrency())
+                                    .paymentMethod(finalPayment.getPaymentMethod())
+                                    .status(finalPayment.getStatus())
+                                    .description(finalPayment.getDescription())
+                                    .reference(finalPayment.getReference())
+                                    .transactionReference(finalPayment.getTransactionReference())
+                                    .gatewayResponse(finalPayment.getGatewayResponse())
+                                    .createdAt(finalPayment.getCreatedAt())
+                                    .updatedAt(finalPayment.getUpdatedAt())
+                                    .message("Payment processed successfully")
+                                    .build())
+                            .doOnError(error -> log.error("Error processing payment: {}", error.getMessage()));
+                }));
     }
 
     @Override

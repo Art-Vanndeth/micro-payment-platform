@@ -12,21 +12,17 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionEvent {
-    private String transactionId;
+public class PaymentCreatedEvent {
     private String paymentId;
-    private String fromAccountId;
-    private String toAccountId;
+    private String accountId;
+    private String recipientAccountId;
     private BigDecimal amount;
     private String currency;
-    private String transactionType;
+    private String paymentMethod;
     private String status;
     private String description;
     private String reference;
     private String transactionReference;
     private LocalDateTime createdAt;
-    private LocalDateTime completedAt;
     private String eventType;
-    private String errorMessage;
-    private LocalDateTime timestamp;
 }

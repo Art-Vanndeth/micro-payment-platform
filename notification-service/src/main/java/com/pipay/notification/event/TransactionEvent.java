@@ -1,4 +1,4 @@
-package com.pipay.transaction.event;
+package com.pipay.notification.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

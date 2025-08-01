@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: notification-service
+
+# Notification Service Kafka Configuration
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:29092
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+# Kafka Topics Configuration
+kafka:
+  topics:
+    transaction-events: transaction-events
+
+# WebSocket Configuration
+websocket:
+  allowed-origins: "*"
+  endpoint: "/ws/admin"
+
+server:
+  port: 8095

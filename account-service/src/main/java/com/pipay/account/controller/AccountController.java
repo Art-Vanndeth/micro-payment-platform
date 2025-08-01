@@ -3,6 +3,8 @@ package com.pipay.account.controller;
 import com.pipay.account.dto.AccountResponse;
 import com.pipay.account.dto.BalanceCheckResponse;
 import com.pipay.account.dto.BalanceResponse;
+import com.pipay.account.dto.AccountValidationResponse;
+import com.pipay.account.dto.TransferResponse;
 import com.pipay.account.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +51,25 @@ public class AccountController {
     @PostMapping("/{accountId}/unfreeze")
     public ResponseEntity<AccountResponse> unfreezeAccount(@PathVariable String accountId) {
         AccountResponse response = accountService.unfreezeAccount(accountId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{accountId}/validate")
+    public ResponseEntity<AccountValidationResponse> validateAccount(@PathVariable String accountId) {
+        log.info("Validating account: {}", accountId);
+        AccountValidationResponse response = accountService.validateAccount(accountId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<TransferResponse> processTransfer(@RequestBody Map<String, Object> request) {
+        log.info("Processing transfer request: {}", request);
+
+        String sourceAccountId = (String) request.get("sourceAccountId");
+        String recipientAccountId = (String) request.get("recipientAccountId");
+        BigDecimal amount = new BigDecimal(request.get("amount").toString());
+
+        TransferResponse response = accountService.processTransfer(sourceAccountId, recipientAccountId, amount);
         return ResponseEntity.ok(response);
     }
 }

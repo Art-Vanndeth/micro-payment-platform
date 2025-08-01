@@ -1,4 +1,4 @@
-package com.pipay.transaction.event;
+package com.pipay.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,21 +12,20 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionEvent {
+public class NotificationMessage {
+    private String id;
+    private String title;
+    private String message;
+    private String type;
+    private String priority;
     private String transactionId;
     private String paymentId;
     private String fromAccountId;
     private String toAccountId;
     private BigDecimal amount;
     private String currency;
-    private String transactionType;
     private String status;
-    private String description;
-    private String reference;
-    private String transactionReference;
-    private LocalDateTime createdAt;
-    private LocalDateTime completedAt;
-    private String eventType;
-    private String errorMessage;
     private LocalDateTime timestamp;
+    private boolean read;
+    private String category;
 }

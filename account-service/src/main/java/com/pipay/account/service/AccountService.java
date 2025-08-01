@@ -3,6 +3,8 @@ package com.pipay.account.service;
 import com.pipay.account.dto.AccountResponse;
 import com.pipay.account.dto.BalanceCheckResponse;
 import com.pipay.account.dto.BalanceResponse;
+import com.pipay.account.dto.AccountValidationResponse;
+import com.pipay.account.dto.TransferResponse;
 
 import java.math.BigDecimal;
 
@@ -12,5 +14,7 @@ public interface AccountService {
     BalanceResponse getBalance(String accountId);
     AccountResponse freezeAccount(String accountId);
     AccountResponse unfreezeAccount(String accountId);
+    AccountValidationResponse validateAccount(String accountId);
+    TransferResponse processTransfer(String sourceAccountId, String recipientAccountId, BigDecimal amount);
 
 }

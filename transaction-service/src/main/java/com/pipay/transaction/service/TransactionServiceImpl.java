@@ -241,12 +241,15 @@ public class TransactionServiceImpl implements TransactionService {
                 .toAccountId(transaction.getToAccountId())
                 .amount(transaction.getAmount())
                 .currency(transaction.getCurrency())
-                .transactionType(transaction.getTransactionType())
-                .status(transaction.getStatus())
+                .transactionType(transaction.getTransactionType().toString())
+                .status(transaction.getStatus().toString())
                 .description(transaction.getDescription())
+                .reference(transaction.getReference())
+                .transactionReference(transaction.getTransactionReference())
                 .createdAt(transaction.getCreatedAt())
-                .updatedAt(transaction.getUpdatedAt())
+                .completedAt(transaction.getCompletedAt())
                 .eventType(eventType)
+                .timestamp(LocalDateTime.now())
                 .build();
 
         kafkaTemplate.send(transactionEventTopic, transactionEvent);

@@ -18,7 +18,7 @@ public interface TransactionRepository extends ReactiveMongoRepository<Transacti
     Flux<Transaction> findByPaymentId(String paymentId);
 
     // Find transactions by account (either from or to)
-    Flux<Transaction> findByFromAccountIdOrToAccountId(String fromAccountId, String toAccountId);
+    Flux<Transaction> findByFromAccountNumberOrToAccountNumber(String fromAccountNumber, String toAccountNumber);
 
     // Find transactions by status
     Flux<Transaction> findByStatus(TransactionStatus status);
@@ -27,14 +27,14 @@ public interface TransactionRepository extends ReactiveMongoRepository<Transacti
     Flux<Transaction> findByTransactionType(TransactionType transactionType);
 
     // Find transactions by account and status
-    Flux<Transaction> findByFromAccountIdAndStatus(String accountId, TransactionStatus status);
+    Flux<Transaction> findByFromAccountNumberAndStatus(String accountNumber, TransactionStatus status);
 
     // Find transactions within date range
     Flux<Transaction> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     // Custom query to find transactions by account and date range
-    @Query("{ $and: [ { $or: [ { 'fromAccountId': ?0 }, { 'toAccountId': ?0 } ] }, { 'createdAt': { $gte: ?1, $lte: ?2 } } ] }")
-    Flux<Transaction> findByAccountIdAndDateRange(String accountId, LocalDateTime startDate, LocalDateTime endDate);
+    @Query("{ $and: [ { $or: [ { 'fromAccountNumber': ?0 }, { 'toAccountNumber': ?0 } ] }, { 'createdAt': { $gte: ?1, $lte: ?2 } } ] }")
+    Flux<Transaction> findByAccountNumberAndDateRange(String accountNumber, LocalDateTime startDate, LocalDateTime endDate);
 
     // Count transactions by status
     Mono<Long> countByStatus(TransactionStatus status);

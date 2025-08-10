@@ -7,17 +7,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class PaymentEventConsumer {
 
     private final TransactionService transactionService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "${kafka.topics.payment-created-events}", groupId = "${kafka.consumer.group-id}")
+    @KafkaListener(topics = "${kafka.topics.payment-created-events-topic}", groupId = "${kafka.consumer.group-id}")
     public void handlePaymentCreatedEvent(@Payload String message) {
         try {
             log.info("Received payment created event: {}", message);

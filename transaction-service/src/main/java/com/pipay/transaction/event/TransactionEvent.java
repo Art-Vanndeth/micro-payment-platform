@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 public class TransactionEvent {
     private String transactionId;
     private String paymentId;
-    private String fromAccountId;
-    private String toAccountId;
+    private String fromAccountNumber;
+    private String toAccountNumber;
     private BigDecimal amount;
     private String currency;
     private String transactionType;

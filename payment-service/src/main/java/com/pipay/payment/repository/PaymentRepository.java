@@ -9,7 +9,8 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface PaymentRepository extends R2dbcRepository<Payment, String> {
 
-    Flux<Payment> findByAccountId(String accountId);
-    Flux<Payment> findByRecipientAccountId(String recipientAccountId);
+    Flux<Payment> findByAccountNumber(String accountNumber);
+    Flux<Payment> findByRecipientAccountNumber(String recipientAccountNumber);
     Mono<Payment> findByTransactionReference(String transactionReference);
+
 }

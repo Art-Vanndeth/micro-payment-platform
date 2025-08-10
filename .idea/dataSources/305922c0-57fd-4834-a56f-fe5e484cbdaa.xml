@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="payment_audit@localhost">
+  <database-model serializer="dbm" dbms="MONGO" family-id="MONGO" format-version="4.53">
+    <root id="1">
+      <ServerVersion>7.0.22</ServerVersion>
+    </root>
+    <schema id="2" parent="1" name="payment_audit">
+      <Current>1</Current>
+      <LastIntrospectionLocalTimestamp>2025-08-10.15:48:44</LastIntrospectionLocalTimestamp>
+    </schema>
+  </database-model>
+</dataSource>

@@ -8,7 +8,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/Art-Vanndeth/micro-payment-platform-configuration.git
+          uri: https://github.com/Art-Vanndeth/vault-micro-payment-platform-configuration.git
           search-paths: '/services/**'
           default-label: main
 

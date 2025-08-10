@@ -26,40 +26,39 @@ public class AccountServiceHelper {
     @Value("${integration.account-service.url}")
     private String accountServiceUrl;
 
-    public Mono<BalanceCheckResponse> checkBalance(String accountId, BigDecimal amount) {
-        log.debug("Calling account service to check balance for account: {} with amount: {}", accountId, amount);
+    public Mono<BalanceCheckResponse> checkBalance(String accountNumber, BigDecimal amount) {
+        log.debug("Calling account service to check balance for account: {} with amount: {}", accountNumber, amount);
 
         // Wrap amount in a map to match the expected JSON structure {"amount": value}
         Map<String, BigDecimal> requestBody = Map.of("amount", amount);
 
         return webClient.post()
-                .uri(accountServiceUrl + "/" + accountId + CHECK_BALANCE)
+                .uri(accountServiceUrl + "/" + accountNumber + CHECK_BALANCE)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(BalanceCheckResponse.class);
     }
 
-    public Mono<AccountValidationResponse> validateAccount(String accountId) {
-        log.debug("Calling account service to validate account: {}", accountId);
+    public Mono<AccountValidationResponse> validateAccount(String accountNumber) {
+        log.debug("Calling account service to validate account: {}", accountNumber);
 
         return webClient.get()
-                .uri(accountServiceUrl + "/" + accountId + VALIDATE_ACCOUNT)
+                .uri(accountServiceUrl + "/" + accountNumber + VALIDATE_ACCOUNT)
                 .retrieve()
                 .bodyToMono(AccountValidationResponse.class)
-                .doOnSuccess(response -> log.debug("Account validation response for {}: {}", accountId, response))
-                .doOnError(error -> log.error("Error validating account {}: {}", accountId, error.getMessage()));
+                .doOnSuccess(response -> log.debug("Account validation response for {}: {}", accountNumber, response))
+                .doOnError(error -> log.error("Error validating account {}: {}", accountNumber, error.getMessage()));
     }
 
-    public Mono<TransferResponse> processTransfer(String sourceAccountId, String recipientAccountId, BigDecimal amount) {
+    public Mono<TransferResponse> processTransfer(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount) {
         log.debug("Calling account service to process transfer from {} to {} for amount: {}",
-                sourceAccountId, recipientAccountId, amount);
+                sourceAccountNumber, recipientAccountNumber, amount);
 
         Map<String, Object> requestBody = Map.of(
-                "sourceAccountId", sourceAccountId,
-                "recipientAccountId", recipientAccountId,
-                "amount", amount
-        );
+                "sourceAccountNumber", sourceAccountNumber,
+                "recipientAccountNumber", recipientAccountNumber,
+                "amount", amount);
 
         return webClient.post()
                 .uri(accountServiceUrl + PROCESS_TRANSFER)

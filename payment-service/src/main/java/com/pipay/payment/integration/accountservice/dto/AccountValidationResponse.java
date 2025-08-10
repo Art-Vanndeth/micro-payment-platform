@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AccountValidationResponse {
-    private String accountId;
+    private String accountNumber;
     private boolean isValid;
     private AccountStatus accountStatus;
     private String accountType;

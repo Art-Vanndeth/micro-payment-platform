@@ -15,8 +15,8 @@ import java.math.BigDecimal;
 @Builder
 public class PaymentRequest {
 
-    @NotBlank(message = "Account ID is required")
-    private String accountId;
+    @NotBlank(message = "Account number is required")
+    private String accountNumber;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
@@ -30,7 +30,7 @@ public class PaymentRequest {
     private PaymentMethod paymentMethod;
 
     @NotBlank(message = "Recipient account is required")
-    private String recipientAccountId;
+    private String recipientAccountNumber;
 
     private String description;
     private String reference;

@@ -25,11 +25,11 @@ public class CreateTransactionRequest {
 
     @NotNull
     @NotBlank
-    private String fromAccountId;
+    private String fromAccountNumber;
 
     @NotNull
     @NotBlank
-    private String toAccountId;
+    private String toAccountNumber;
 
     @NotNull
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")

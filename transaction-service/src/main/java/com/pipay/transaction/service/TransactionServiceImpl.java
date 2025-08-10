@@ -25,7 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
-    @Value("${kafka.topics.transaction-events}")
+    @Value("${kafka.topics.transaction-created-events-topic}")
     private String transactionEventTopic;
 
     private final TransactionRepository transactionRepository;
@@ -43,8 +43,8 @@ public class TransactionServiceImpl implements TransactionService {
             Transaction transaction = Transaction.builder()
                     .transactionId(transactionId)
                     .paymentId(request.getPaymentId())
-                    .fromAccountId(request.getFromAccountId())
-                    .toAccountId(request.getToAccountId())
+                    .fromAccountNumber(request.getFromAccountNumber())
+                    .toAccountNumber(request.getToAccountNumber())
                     .amount(request.getAmount())
                     .currency(request.getCurrency().toUpperCase())
                     .transactionType(request.getTransactionType())
@@ -73,8 +73,8 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction debitTransaction = Transaction.builder()
                 .transactionId(UUID.randomUUID().toString())
                 .paymentId(paymentEvent.getPaymentId())
-                .fromAccountId(paymentEvent.getAccountId())
-                .toAccountId(paymentEvent.getRecipientAccountId())
+                .fromAccountNumber(paymentEvent.getAccountNumber())
+                .toAccountNumber(paymentEvent.getRecipientAccountNumber())
                 .amount(paymentEvent.getAmount())
                 .currency(paymentEvent.getCurrency())
                 .transactionType(TransactionType.DEBIT)
@@ -93,8 +93,8 @@ public class TransactionServiceImpl implements TransactionService {
                     Transaction creditTransaction = Transaction.builder()
                             .transactionId(UUID.randomUUID().toString())
                             .paymentId(paymentEvent.getPaymentId())
-                            .fromAccountId(paymentEvent.getAccountId())
-                            .toAccountId(paymentEvent.getRecipientAccountId())
+                            .fromAccountNumber(paymentEvent.getAccountNumber())
+                            .toAccountNumber(paymentEvent.getRecipientAccountNumber())
                             .amount(paymentEvent.getAmount())
                             .currency(paymentEvent.getCurrency())
                             .transactionType(TransactionType.CREDIT)
@@ -106,7 +106,7 @@ public class TransactionServiceImpl implements TransactionService {
                     return transactionRepository.save(creditTransaction)
                             .doOnSuccess(savedCreditTransaction -> {
                                 log.info("Credit transaction created successfully: {}", savedCreditTransaction.getTransactionId());
-                                publishTransactionEvent(savedCreditTransaction, "TRANSACTION_CREATED");
+//                                publishTransactionEvent(savedCreditTransaction, "TRANSACTION_CREATED");
                             })
                             .map(creditTx -> debitTx); // Return the debit transaction as primary
                 })
@@ -158,11 +158,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Flux<Transaction> getTransactionsByAccountId(String accountId) {
-        log.info("Retrieving transactions by account ID: {}", accountId);
-        return transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId)
-                .doOnComplete(() -> log.info("Retrieved transactions for account: {}", accountId))
-                .doOnError(error -> log.error("Error retrieving transactions for account {}: {}", accountId, error.getMessage()));
+    public Flux<Transaction> getTransactionsByAccountNumber(String accountNumber) {
+        log.info("Retrieving transactions by account number: {}", accountNumber);
+        return transactionRepository.findByFromAccountNumberOrToAccountNumber(accountNumber, accountNumber)
+                .doOnComplete(() -> log.info("Retrieved transactions for account: {}", accountNumber))
+                .doOnError(error -> log.error("Error retrieving transactions for account {}: {}", accountNumber, error.getMessage()));
     }
 
     @Override
@@ -197,7 +197,7 @@ public class TransactionServiceImpl implements TransactionService {
                 throw new IllegalArgumentException("Transaction amount must be positive");
             }
 
-            if (transaction.getFromAccountId().equals(transaction.getToAccountId())) {
+            if (transaction.getFromAccountNumber().equals(transaction.getToAccountNumber())) {
                 throw new IllegalArgumentException("From and To accounts cannot be the same");
             }
 
@@ -237,8 +237,8 @@ public class TransactionServiceImpl implements TransactionService {
         TransactionEvent transactionEvent = TransactionEvent.builder()
                 .transactionId(transaction.getTransactionId())
                 .paymentId(transaction.getPaymentId())
-                .fromAccountId(transaction.getFromAccountId())
-                .toAccountId(transaction.getToAccountId())
+                .fromAccountNumber(transaction.getFromAccountNumber())
+                .toAccountNumber(transaction.getToAccountNumber())
                 .amount(transaction.getAmount())
                 .currency(transaction.getCurrency())
                 .transactionType(transaction.getTransactionType().toString())

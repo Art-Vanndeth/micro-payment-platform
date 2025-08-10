@@ -39,11 +39,11 @@ public class Transaction {
 
     @NotNull
     @Indexed
-    private String fromAccountId;
+    private String fromAccountNumber;
 
     @NotNull
     @NotBlank
-    private String toAccountId;
+    private String toAccountNumber;
 
     @NotNull
     @DecimalMin(value = "0.01")

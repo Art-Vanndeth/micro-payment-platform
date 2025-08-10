@@ -7,13 +7,31 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.38/57f8f5e02e92a30fd21b80cbd426a4172b5f8e29/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="account-service.main" />
+        <module name="notification-service.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="account-service" target="21" />
+      <module name="account-service.main" target="21" />
+      <module name="account-service.test" target="21" />
       <module name="api-gateway" target="21" />
       <module name="api-gateway.main" target="21" />
       <module name="api-gateway.test" target="21" />
+      <module name="config-server" target="21" />
+      <module name="config-server.main" target="21" />
+      <module name="config-server.test" target="21" />
+      <module name="eureka-server" target="21" />
+      <module name="eureka-server.main" target="21" />
+      <module name="eureka-server.test" target="21" />
+      <module name="notification-service" target="21" />
+      <module name="notification-service.main" target="21" />
+      <module name="notification-service.test" target="21" />
+      <module name="payment-service" target="21" />
+      <module name="payment-service.main" target="21" />
+      <module name="payment-service.test" target="21" />
+      <module name="transaction-service" target="21" />
+      <module name="transaction-service.main" target="21" />
+      <module name="transaction-service.test" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
@@ -24,12 +42,6 @@
       <module name="api-gateway" options="-parameters" />
       <module name="api-gateway.main" options="-parameters" />
       <module name="api-gateway.test" options="-parameters" />
-      <module name="config-server" options="-parameters" />
-      <module name="config-server.main" options="-parameters" />
-      <module name="config-server.test" options="-parameters" />
-      <module name="eureka-server" options="-parameters" />
-      <module name="eureka-server.main" options="-parameters" />
-      <module name="eureka-server.test" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="notification-service.main" options="-parameters" />
       <module name="notification-service.test" options="-parameters" />

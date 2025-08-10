@@ -1,8 +1,8 @@
 -- Insert 10 sample payment records
 INSERT INTO payments (
     payment_id,
-    account_id,
-    recipient_account_id,
+    account_number,
+    recipient_account_number,
     amount,
     currency,
     payment_method,
@@ -18,8 +18,8 @@ INSERT INTO payments (
 ) VALUES
 (
     'PAY_001234567890ABCD',
-    'a1b2c3d4-e5f6-7890-abcd-123456789001',
-    'a1b2c3d4-e5f6-7890-abcd-123456789002',
+    'ACC001234567890',
+    'ACC001234567891',
     150.00,
     'USD',
     'CREDIT_CARD',
@@ -35,8 +35,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_002345678901BCDE',
-    'a1b2c3d4-e5f6-7890-abcd-123456789003',
-    'a1b2c3d4-e5f6-7890-abcd-123456789004',
+    'ACC001234567892',
+    'ACC001234567893',
     2500.50,
     'USD',
     'BANK_TRANSFER',
@@ -52,8 +52,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_003456789012CDEF',
-    'a1b2c3d4-e5f6-7890-abcd-123456789005',
-    'a1b2c3d4-e5f6-7890-abcd-123456789006',
+    'ACC001234567894',
+    'ACC001234567895',
     75.25,
     'EUR',
     'DIGITAL_WALLET',
@@ -69,8 +69,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_004567890123DEFA',
-    'a1b2c3d4-e5f6-7890-abcd-123456789007',
-    'a1b2c3d4-e5f6-7890-abcd-123456789008',
+    'ACC001234567896',
+    'ACC001234567897',
     1200.00,
     'USD',
     'DEBIT_CARD',
@@ -86,8 +86,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_005678901234EFAB',
-    'a1b2c3d4-e5f6-7890-abcd-123456789009',
-    'a1b2c3d4-e5f6-7890-abcd-123456789010',
+    'ACC001234567898',
+    'ACC001234567899',
     850.75,
     'GBP',
     'PAYPAL',
@@ -103,8 +103,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_006789012345FABC',
-    'a1b2c3d4-e5f6-7890-abcd-123456789001',
-    'a1b2c3d4-e5f6-7890-abcd-123456789003',
+    'ACC001234567890',
+    'ACC001234567892',
     320.40,
     'USD',
     'STRIPE',
@@ -120,8 +120,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_007890123456ABCD',
-    'a1b2c3d4-e5f6-7890-abcd-123456789002',
-    'a1b2c3d4-e5f6-7890-abcd-123456789005',
+    'ACC001234567891',
+    'ACC001234567894',
     5000.00,
     'USD',
     'BANK_TRANSFER',
@@ -137,8 +137,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_008901234567BCDE',
-    'a1b2c3d4-e5f6-7890-abcd-123456789004',
-    'a1b2c3d4-e5f6-7890-abcd-123456789007',
+    'ACC001234567893',
+    'ACC001234567896',
     42.99,
     'CAD',
     'CREDIT_CARD',
@@ -154,8 +154,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_009012345678CDEF',
-    'a1b2c3d4-e5f6-7890-abcd-123456789006',
-    'a1b2c3d4-e5f6-7890-abcd-123456789009',
+    'ACC001234567895',
+    'ACC001234567898',
     180.00,
     'EUR',
     'DIGITAL_WALLET',
@@ -171,8 +171,8 @@ INSERT INTO payments (
 ),
 (
     'PAY_010123456789DEFA',
-    'a1b2c3d4-e5f6-7890-abcd-123456789008',
-    'a1b2c3d4-e5f6-7890-abcd-123456789001',
+    'ACC001234567896',
+    'ACC001234567890',
     999.99,
     'USD',
     'STRIPE',
@@ -186,4 +186,3 @@ INSERT INTO payments (
     CURRENT_TIMESTAMP - INTERVAL '5 minutes',
     0
 );
-

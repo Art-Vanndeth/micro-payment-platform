@@ -22,8 +22,8 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     Optional<Account> findByAccountNumber(@Param("accountNumber") String accountNumber);
 
     @Modifying
-    @Query("UPDATE Account a SET a.balance = a.balance + :amount, a.updatedAt = :updatedAt WHERE a.accountId = :accountId")
-    int updateBalance(@Param("accountId") String accountId,
+    @Query("UPDATE Account a SET a.balance = a.balance + :amount, a.updatedAt = :updatedAt WHERE a.accountNumber = :accountNumber")
+    int updateBalance(@Param("accountNumber") String accountNumber,
                       @Param("amount") BigDecimal amount,
                       @Param("updatedAt") LocalDateTime updatedAt);
 }

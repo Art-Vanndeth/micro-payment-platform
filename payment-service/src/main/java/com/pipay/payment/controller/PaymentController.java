@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor
 public class PaymentController {
 
@@ -25,7 +25,7 @@ public class PaymentController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public Mono<PaymentResponse> payment(@Valid @RequestBody PaymentRequest request) {
         log.info("Received payment request for account: {} amount: {} {}",
-                request.getAccountId(), request.getAmount(), request.getCurrency());
+                request.getAccountNumber(), request.getAmount(), request.getCurrency());
 
         return paymentService.payment(request)
                 .doOnSuccess(response -> log.info("Payment processing completed: {}", response.getPaymentId()))

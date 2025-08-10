@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BalanceCheckResponse {
-    private String accountId;
+    private String accountNumber;
     private BigDecimal availableBalance;
     private BigDecimal currentBalance;
     private boolean sufficientFunds;

@@ -2,11 +2,7 @@ package com.pipay.account.service;
 
 
 import com.pipay.account.constant.AccountStatus;
-import com.pipay.account.dto.AccountResponse;
-import com.pipay.account.dto.BalanceCheckResponse;
-import com.pipay.account.dto.BalanceResponse;
-import com.pipay.account.dto.AccountValidationResponse;
-import com.pipay.account.dto.TransferResponse;
+import com.pipay.account.dto.*;
 import com.pipay.account.entity.Account;
 import com.pipay.account.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -32,19 +29,45 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Override
-    @Cacheable(value = "balance-checks", key = "#accountId")
-    public BalanceCheckResponse checkBalance(String accountId, BigDecimal amount) {
-        log.info("Checking balance for account: {} with amount: {}", accountId, amount);
+    private static final String CURRENCY_KHR = "KHR";
+    private static final String CURRENCY_USD = "USD";
+    private static final BigDecimal EXCHANGE_RATE = BigDecimal.valueOf(4000);
 
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountId));
+    private BigDecimal convertToUSD(BigDecimal amount, String currency) {
+        if (CURRENCY_KHR.equals(currency)) {
+            return amount.divide(EXCHANGE_RATE, 2, RoundingMode.HALF_UP);
+        }
+        return amount;
+    }
+
+    private BigDecimal convertToKHR(BigDecimal amount, String currency) {
+        if (CURRENCY_USD.equals(currency)) {
+            return amount.multiply(EXCHANGE_RATE);
+        }
+        return amount;
+    }
+
+    @Override
+    public BalanceCheckResponse checkBalance(String accountNumber, BigDecimal amount) {
+        log.info("Checking balance for account: {} with amount: {}", accountNumber, amount);
+
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountNumber));
+
+        // Check if amount is valid
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            log.warn("Invalid amount for balance check: {}", amount);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be greater than zero");
+        }
+
+        // Convert amount to account currency if needed
+        BigDecimal convertedAmount = convertToUSD(amount, account.getCurrency());
 
         // Check if account is active
         if (account.getStatus() != AccountStatus.ACTIVE) {
-            log.warn("Account {} is not active. Status: {}", accountId, account.getStatus());
+            log.warn("Account {} is not active. Status: {}", accountNumber, account.getStatus());
             return BalanceCheckResponse.builder()
-                    .accountId(accountId)
+                    .accountNumber(accountNumber)
                     .currentBalance(account.getBalance())
                     .availableBalance(account.getAvailableBalance())
                     .sufficientFunds(false)
@@ -53,17 +76,12 @@ public class AccountServiceImpl implements AccountService {
                     .build();
         }
 
-        // Check if amount is valid
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            log.warn("Invalid amount for balance check: {}", amount);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be greater than zero");
-        }
-
         // Check if sufficient funds are available
-        boolean sufficientFunds = account.getAvailableBalance().compareTo(amount) >= 0;
+        boolean sufficientFunds = account.getAvailableBalance().compareTo(convertedAmount) >= 0;
 
+        // Ensure sufficientFunds is correctly calculated and returned
         return BalanceCheckResponse.builder()
-                .accountId(accountId)
+                .accountNumber(accountNumber)
                 .currentBalance(account.getBalance())
                 .availableBalance(account.getAvailableBalance())
                 .sufficientFunds(sufficientFunds)
@@ -73,18 +91,18 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @Cacheable(value = "balances", key = "#accountId")
-    public BalanceResponse getBalance(String accountId) {
-        log.info("Getting balance for account: {}", accountId);
+    @Cacheable(value = "balances", key = "#accountNumber")
+    public BalanceResponse getBalance(String accountNumber) {
+        log.info("Getting balance for account: {}", accountNumber);
 
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountId));
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountNumber));
 
-        BigDecimal reservedAmount = getReservedAmount(accountId);
+        BigDecimal reservedAmount = getReservedAmount(accountNumber);
         BigDecimal availableBalance = account.getBalance().subtract(reservedAmount);
 
         return BalanceResponse.builder()
-                .accountId(accountId)
+                .accountNumber(accountNumber)
                 .balance(account.getBalance())
                 .availableBalance(availableBalance)
                 .currency(account.getCurrency())
@@ -94,22 +112,25 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @CacheEvict(value = {"accounts", "balances"}, key = "#accountId")
-    public AccountResponse freezeAccount(String accountId) {
-        log.info("Freezing account: {}", accountId);
+    @CacheEvict(value = {"accounts", "balances"}, key = "#accountNumber")
+    public AccountResponse freezeAccount(String accountNumber) {
 
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountId));
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountNumber));
+
+        if (account.getStatus().equals(AccountStatus.FROZEN)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Account is already frozen");
+        }
 
         account.setStatus(AccountStatus.FROZEN);
         account.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(account);
 
         // Evict cache
-        evictAccountCache(accountId);
+        evictAccountCache(accountNumber);
 
         return AccountResponse.builder()
-                .accountId(accountId)
+                .accountNumber(accountNumber)
                 .accountNumber(account.getAccountNumber())
                 .status(AccountStatus.FROZEN)
                 .type(account.getAccountType())
@@ -120,22 +141,24 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @CacheEvict(value = {"accounts", "balances"}, key = "#accountId")
-    public AccountResponse unfreezeAccount(String accountId) {
-        log.info("Unfreezing account: {}", accountId);
+    @CacheEvict(value = {"accounts", "balances"}, key = "#accountNumber")
+    public AccountResponse unfreezeAccount(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountNumber));
 
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountId));
+        if (account.getStatus().equals(AccountStatus.ACTIVE)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Account is already active");
+        }
 
         account.setStatus(AccountStatus.ACTIVE);
         account.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(account);
 
         // Evict cache
-        evictAccountCache(accountId);
+        evictAccountCache(accountNumber);
 
         return AccountResponse.builder()
-                .accountId(accountId)
+                .accountNumber(accountNumber)
                 .accountNumber(account.getAccountNumber())
                 .status(AccountStatus.ACTIVE)
                 .type(account.getAccountType())
@@ -145,39 +168,39 @@ public class AccountServiceImpl implements AccountService {
                 .build();
     }
 
-    private BigDecimal getReservedAmount(String accountId) {
-        String key = "reserved:" + accountId;
+    private BigDecimal getReservedAmount(String accountNumber) {
+        String key = "reserved:" + accountNumber;
         Object reserved = redisTemplate.opsForValue().get(key);
         return reserved != null ? new BigDecimal(reserved.toString()) : BigDecimal.ZERO;
     }
 
-    public void reserveAmount(String accountId, BigDecimal amount) {
-        String key = "reserved:" + accountId;
+    public void reserveAmount(String accountNumber, BigDecimal amount) {
+        String key = "reserved:" + accountNumber;
         redisTemplate.opsForValue().increment(key, amount.doubleValue());
         redisTemplate.expire(key, Duration.ofMinutes(30));
     }
 
-    public void releaseReservedAmount(String accountId, BigDecimal amount) {
-        String key = "reserved:" + accountId;
+    public void releaseReservedAmount(String accountNumber, BigDecimal amount) {
+        String key = "reserved:" + accountNumber;
         redisTemplate.opsForValue().increment(key, -amount.doubleValue());
     }
 
-    @CacheEvict(value = {"accounts", "balances", "balance-checks"}, key = "#accountId")
-    public void evictAccountCache(String accountId) {
-        log.debug("Evicting cache for account: {}", accountId);
+    @CacheEvict(value = {"accounts", "balances", "balance-checks"}, key = "#accountNumber")
+    public void evictAccountCache(String accountNumber) {
+        log.debug("Evicting cache for account: {}", accountNumber);
     }
 
     @Override
-    public AccountValidationResponse validateAccount(String accountId) {
-        log.info("Validating account: {}", accountId);
+    public AccountValidationResponse validateAccount(String accountNumber) {
+        log.info("Validating account: {}", accountNumber);
 
         try {
-            Account account = accountRepository.findById(accountId)
+            Account account = accountRepository.findByAccountNumber(accountNumber)
                     .orElse(null);
 
             if (account == null) {
                 return AccountValidationResponse.builder()
-                        .accountId(accountId)
+                        .accountNumber(accountNumber)
                         .isValid(false)
                         .message("Account not found")
                         .errorCode("ACCOUNT_NOT_FOUND")
@@ -185,7 +208,7 @@ public class AccountServiceImpl implements AccountService {
             }
 
             return AccountValidationResponse.builder()
-                    .accountId(accountId)
+                    .accountNumber(accountNumber)
                     .isValid(true)
                     .accountStatus(account.getStatus())
                     .accountType(account.getAccountType().toString())
@@ -193,9 +216,9 @@ public class AccountServiceImpl implements AccountService {
                     .build();
 
         } catch (Exception e) {
-            log.error("Error validating account {}: {}", accountId, e.getMessage());
+            log.error("Error validating account {}: {}", accountNumber, e.getMessage());
             return AccountValidationResponse.builder()
-                    .accountId(accountId)
+                    .accountNumber(accountNumber)
                     .isValid(false)
                     .message("Account validation failed")
                     .errorCode("VALIDATION_ERROR")
@@ -205,69 +228,99 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public TransferResponse processTransfer(String sourceAccountId, String recipientAccountId, BigDecimal amount) {
-        log.info("Processing transfer from {} to {} for amount: {}", sourceAccountId, recipientAccountId, amount);
+    public TransferResponse processTransfer(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount) {
+        log.info("Processing transfer from {} to {} for amount: {}", sourceAccountNumber, recipientAccountNumber, amount);
 
         String transactionId = UUID.randomUUID().toString();
 
         try {
             // Validate input parameters
             if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Invalid amount", "INVALID_AMOUNT");
             }
 
-            if (sourceAccountId.equals(recipientAccountId)) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+            if (sourceAccountNumber.equals(recipientAccountNumber)) {
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Cannot transfer to the same account", "SAME_ACCOUNT_TRANSFER");
             }
 
             // Get source account
-            Account sourceAccount = accountRepository.findById(sourceAccountId)
+            Account sourceAccount = accountRepository.findByAccountNumber(sourceAccountNumber)
                     .orElse(null);
             if (sourceAccount == null) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Source account not found", "SOURCE_ACCOUNT_NOT_FOUND");
             }
 
             // Get recipient account
-            Account recipientAccount = accountRepository.findById(recipientAccountId)
+            Account recipientAccount = accountRepository.findByAccountNumber(recipientAccountNumber)
                     .orElse(null);
             if (recipientAccount == null) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Recipient account not found", "RECIPIENT_ACCOUNT_NOT_FOUND");
+            }
+
+            if (!(sourceAccount.getCurrency().equals(CURRENCY_KHR) || sourceAccount.getCurrency().equals(CURRENCY_USD))) {
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
+                        "Unsupported source account currency: " + sourceAccount.getCurrency(), "UNSUPPORTED_CURRENCY");
+            }
+
+            if (!(recipientAccount.getCurrency().equals(CURRENCY_KHR) || recipientAccount.getCurrency().equals(CURRENCY_USD))) {
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
+                        "Unsupported source account currency: " + sourceAccount.getCurrency(), "UNSUPPORTED_CURRENCY");
             }
 
             // Check account statuses
             if (sourceAccount.getStatus() != AccountStatus.ACTIVE) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Source account is " + sourceAccount.getStatus().getDescription(), "SOURCE_ACCOUNT_INACTIVE");
             }
 
             if (recipientAccount.getStatus() != AccountStatus.ACTIVE) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Recipient account is " + recipientAccount.getStatus().getDescription(), "RECIPIENT_ACCOUNT_INACTIVE");
             }
 
-            // Check sufficient funds
-            if (sourceAccount.getBalance().compareTo(amount) < 0) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+            // Check sufficient funds in source account
+            BigDecimal convertedAmount = convertToUSD(amount, sourceAccount.getCurrency());
+            if (sourceAccount.getAvailableBalance().compareTo(convertedAmount) < 0) {
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                         "Insufficient funds", "INSUFFICIENT_FUNDS");
             }
 
-            // Check currency compatibility
-            if (!sourceAccount.getCurrency().equals(recipientAccount.getCurrency())) {
-                return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
-                        "Currency mismatch", "CURRENCY_MISMATCH");
+            // Validate recipient account currency
+            if (!CURRENCY_KHR.equals(recipientAccount.getCurrency()) && !CURRENCY_USD.equals(recipientAccount.getCurrency())) {
+                return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
+                        "Unsupported recipient account currency: " + recipientAccount.getCurrency(), "UNSUPPORTED_CURRENCY");
             }
 
-            // Process the transfer
-            sourceAccount.setBalance(sourceAccount.getBalance().subtract(amount));
-            sourceAccount.setAvailableBalance(sourceAccount.getAvailableBalance().subtract(amount));
+            // Convert amount based on source and recipient currencies
+            BigDecimal sourceDeductedAmount;
+            BigDecimal recipientAddedAmount;
+
+            if (CURRENCY_USD.equals(sourceAccount.getCurrency()) && CURRENCY_KHR.equals(recipientAccount.getCurrency())) {
+                // Convert USD to KHR
+                sourceDeductedAmount = amount;
+                recipientAddedAmount = convertToKHR(amount, sourceAccount.getCurrency());
+            } else if (CURRENCY_KHR.equals(sourceAccount.getCurrency()) && CURRENCY_USD.equals(recipientAccount.getCurrency())) {
+                // Convert KHR to USD
+                sourceDeductedAmount = amount;
+                recipientAddedAmount = convertToUSD(amount, sourceAccount.getCurrency());
+            } else {
+                // Same currency, no conversion needed
+                sourceDeductedAmount = amount;
+                recipientAddedAmount = amount;
+            }
+
+            // Deduct from source account
+            sourceAccount.setBalance(sourceAccount.getBalance().subtract(sourceDeductedAmount));
+            sourceAccount.setAvailableBalance(sourceAccount.getAvailableBalance().subtract(sourceDeductedAmount));
             sourceAccount.setUpdatedAt(LocalDateTime.now());
 
-            recipientAccount.setBalance(recipientAccount.getBalance().add(amount));
-            recipientAccount.setAvailableBalance(recipientAccount.getAvailableBalance().add(amount));
+            // Add to recipient account
+            recipientAccount.setBalance(recipientAccount.getBalance().add(recipientAddedAmount));
+            recipientAccount.setAvailableBalance(recipientAccount.getAvailableBalance().add(recipientAddedAmount));
             recipientAccount.setUpdatedAt(LocalDateTime.now());
 
             // Save both accounts
@@ -275,15 +328,15 @@ public class AccountServiceImpl implements AccountService {
             accountRepository.save(recipientAccount);
 
             // Evict caches for both accounts
-            evictAccountCache(sourceAccountId);
-            evictAccountCache(recipientAccountId);
+            evictAccountCache(sourceAccountNumber);
+            evictAccountCache(recipientAccountNumber);
 
             return TransferResponse.builder()
                     .transactionId(transactionId)
-                    .sourceAccountId(sourceAccountId)
-                    .recipientAccountId(recipientAccountId)
-                    .amount(amount)
-                    .currency(sourceAccount.getCurrency())
+                    .sourceAccountNumber(sourceAccountNumber)
+                    .recipientAccountNumber(recipientAccountNumber)
+                    .amount(recipientAddedAmount)
+                    .currency(recipientAccount.getCurrency())
                     .success(true)
                     .status("COMPLETED")
                     .message("Transfer completed successfully")
@@ -291,19 +344,19 @@ public class AccountServiceImpl implements AccountService {
                     .build();
 
         } catch (Exception e) {
-            log.error("Error processing transfer from {} to {}: {}", sourceAccountId, recipientAccountId, e.getMessage());
-            return createFailureTransferResponse(transactionId, sourceAccountId, recipientAccountId, amount,
+            log.error("Error processing transfer from {} to {}: {}", sourceAccountNumber, recipientAccountNumber, e.getMessage());
+            return createFailureTransferResponse(transactionId, sourceAccountNumber, recipientAccountNumber, amount,
                     "Transfer processing failed: " + e.getMessage(), "PROCESSING_ERROR");
         }
     }
 
-    private TransferResponse createFailureTransferResponse(String transactionId, String sourceAccountId,
-                                                         String recipientAccountId, BigDecimal amount,
-                                                         String message, String errorCode) {
+    private TransferResponse createFailureTransferResponse(String transactionId, String sourceAccountNumber,
+                                                           String recipientAccountNumber, BigDecimal amount,
+                                                           String message, String errorCode) {
         return TransferResponse.builder()
                 .transactionId(transactionId)
-                .sourceAccountId(sourceAccountId)
-                .recipientAccountId(recipientAccountId)
+                .sourceAccountNumber(sourceAccountNumber)
+                .recipientAccountNumber(recipientAccountNumber)
                 .amount(amount)
                 .success(false)
                 .status("FAILED")

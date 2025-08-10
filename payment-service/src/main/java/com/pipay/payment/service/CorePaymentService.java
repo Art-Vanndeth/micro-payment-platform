@@ -1,9 +1,10 @@
 package com.pipay.payment.service;
 
-import com.pipay.payment.integration.accountservice.service.AccountService;
-import com.pipay.payment.integration.accountservice.dto.AccountValidationResponse;
-import com.pipay.payment.integration.accountservice.dto.AccountStatus;
 import com.pipay.payment.exception.CustomException;
+import com.pipay.payment.integration.accountservice.dto.AccountStatus;
+import com.pipay.payment.integration.accountservice.dto.AccountValidationResponse;
+import com.pipay.payment.integration.accountservice.dto.BalanceCheckResponse;
+import com.pipay.payment.integration.accountservice.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,54 +23,57 @@ public class CorePaymentService {
 
     /**
      * Validates recipient account existence and status
-     * @param recipientAccountId the recipient account ID to validate
+     *
+     * @param recipientAccountNumber the recipient account ID to validate
      * @return Mono<AccountValidationResponse> validation result
      */
-    public Mono<AccountValidationResponse> validateRecipientAccount(String recipientAccountId) {
-        log.info("Validating recipient account: {}", recipientAccountId);
+    public Mono<AccountValidationResponse> validateRecipientAccount(String recipientAccountNumber) {
+        log.info("Validating recipient account: {}", recipientAccountNumber);
 
-        return accountService.validateRecipientAccount(recipientAccountId)
+        return accountService.validateRecipientAccount(recipientAccountNumber)
                 .doOnSuccess(response -> {
                     if (response.isValid()) {
                         log.info("Recipient account {} is valid with status: {}",
-                                recipientAccountId, response.getAccountStatus());
+                                recipientAccountNumber, response.getAccountStatus());
                     } else {
                         log.warn("Recipient account {} validation failed: {}",
-                                recipientAccountId, response.getMessage());
+                                recipientAccountNumber, response.getMessage());
                     }
                 })
                 .doOnError(error -> log.error("Error validating recipient account {}: {}",
-                        recipientAccountId, error.getMessage()));
+                        recipientAccountNumber, error.getMessage()));
     }
 
     /**
      * Checks if account status is ACTIVE
+     *
      * @param accountStatus the account status to check
      * @return true if account is ACTIVE, false otherwise
      */
-    public boolean isAccountActive(AccountStatus accountStatus) {
-        return AccountStatus.ACTIVE.equals(accountStatus);
+    public boolean isAccountInactive(AccountStatus accountStatus) {
+        return !AccountStatus.ACTIVE.equals(accountStatus);
     }
 
     /**
      * Processes account deduction from source to recipient
-     * @param sourceAccountId source account ID
-     * @param recipientAccountId recipient account ID
-     * @param amount amount to transfer
+     *
+     * @param sourceAccountNumber    source account ID
+     * @param recipientAccountNumber recipient account ID
+     * @param amount                 amount to transfer
      * @return Mono<Boolean> success status
      */
-    public Mono<Boolean> processAccountDeduction(String sourceAccountId, String recipientAccountId, BigDecimal amount) {
+    public Mono<Boolean> processAccountDeduction(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount) {
         log.info("Processing account deduction from {} to {} for amount: {}",
-                sourceAccountId, recipientAccountId, amount);
+                sourceAccountNumber, recipientAccountNumber, amount);
 
-        return accountService.processAccountDeduction(sourceAccountId, recipientAccountId, amount)
+        return accountService.processAccountDeduction(sourceAccountNumber, recipientAccountNumber, amount)
                 .doOnSuccess(success -> {
                     if (success) {
                         log.info("Account deduction processed successfully from {} to {}",
-                                sourceAccountId, recipientAccountId);
+                                sourceAccountNumber, recipientAccountNumber);
                     } else {
                         log.error("Account deduction failed from {} to {}",
-                                sourceAccountId, recipientAccountId);
+                                sourceAccountNumber, recipientAccountNumber);
                     }
                 })
                 .doOnError(error -> log.error("Error processing account deduction: {}", error.getMessage()));
@@ -77,39 +81,47 @@ public class CorePaymentService {
 
     /**
      * Validates both source and recipient accounts before payment processing
-     * @param sourceAccountId source account ID
-     * @param recipientAccountId recipient account ID
-     * @param amount payment amount
+     *
+     * @param sourceAccountNumber    source account ID
+     * @param recipientAccountNumber recipient account ID
+     * @param amount                 payment amount
      * @return Mono<Void> completes successfully if validation passes
      */
-    public Mono<Void> validatePaymentAccounts(String sourceAccountId, String recipientAccountId, BigDecimal amount) {
+    public Mono<Void> validatePaymentAccounts(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount) {
         log.info("Validating payment accounts - Source: {}, Recipient: {}, Amount: {}",
-                sourceAccountId, recipientAccountId, amount);
+                sourceAccountNumber, recipientAccountNumber, amount);
 
-        // First validate recipient account
-        return validateRecipientAccount(recipientAccountId)
-                .flatMap(recipientValidation -> {
-                    if (!recipientValidation.isValid()) {
-                        return Mono.error(new CustomException(INVALID_PARTICIPANT_CODE));
-                    }
+        return validateRecipientAccount(recipientAccountNumber)
+                .flatMap(recipientValidation -> handleRecipientValidation(recipientValidation, recipientAccountNumber))
+                .then(accountService.checkBalance(sourceAccountNumber, amount))
+                .flatMap(balanceResponse -> handleSourceAccountValidation(balanceResponse, sourceAccountNumber));
+    }
 
-                    if (!isAccountActive(recipientValidation.getAccountStatus())) {
-                        return Mono.error(new CustomException(INVALID_PARTICIPANT_CODE));
-                    }
+    private Mono<Void> handleRecipientValidation(AccountValidationResponse recipientValidation, String recipientAccountNumber) {
+        if (!recipientValidation.isValid()) {
+            log.warn("Recipient account {} is invalid", recipientAccountNumber);
+            return Mono.error(new CustomException(RECIPIENT_ACCOUNT_INVALID));
+        }
 
-                    // Then check source account balance and status
-                    return accountService.checkBalance(sourceAccountId, amount)
-                            .flatMap(balanceResponse -> {
-                                if (!isAccountActive(balanceResponse.getAccountStatus())) {
-                                    return Mono.error(new CustomException(INVALID_PARTICIPANT_CODE));
-                                }
+        if (isAccountInactive(recipientValidation.getAccountStatus())) {
+            log.warn("Recipient account {} is inactive", recipientAccountNumber);
+            return Mono.error(new CustomException(RECIPIENT_ACCOUNT_INACTIVE));
+        }
 
-                                if (!balanceResponse.isSufficientFunds()) {
-                                    return Mono.error(new CustomException(INVALID_PARTICIPANT_CODE));
-                                }
+        return Mono.empty();
+    }
 
-                                return Mono.empty();
-                            });
-                });
+    private Mono<Void> handleSourceAccountValidation(BalanceCheckResponse balanceResponse, String sourceAccountNumber) {
+        if (isAccountInactive(balanceResponse.getAccountStatus())) {
+            log.warn("Source account {} is inactive", sourceAccountNumber);
+            return Mono.error(new CustomException(SOURCE_ACCOUNT_INACTIVE));
+        }
+
+        if (!balanceResponse.isSufficientFunds()) {
+            log.warn("Source account {} has insufficient funds", sourceAccountNumber);
+            return Mono.error(new CustomException(INSUFFICIENT_FUNDS));
+        }
+
+        return Mono.empty();
     }
 }

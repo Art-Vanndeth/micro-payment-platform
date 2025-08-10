@@ -39,7 +39,7 @@ public interface TransactionService {
     /**
      * Retrieves transactions by account ID (both from and to)
      */
-    Flux<Transaction> getTransactionsByAccountId(String accountId);
+    Flux<Transaction> getTransactionsByAccountNumber(String accountNumber);
 
     /**
      * Retrieves transactions by status

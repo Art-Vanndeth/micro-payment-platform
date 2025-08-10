@@ -13,7 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/transactions")
+@RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 @Slf4j
 public class TransactionController {
@@ -37,9 +37,9 @@ public class TransactionController {
         return transactionService.getTransactionsByPaymentId(paymentId);
     }
 
-    @GetMapping("/account/{accountId}")
-    public Flux<Transaction> getTransactionsByAccountId(@PathVariable String accountId) {
-        return transactionService.getTransactionsByAccountId(accountId);
+    @GetMapping("/account/{accountNumber}")
+    public Flux<Transaction> getTransactionsByAccountNumber(@PathVariable String accountNumber) {
+        return transactionService.getTransactionsByAccountNumber(accountNumber);
     }
 
     @GetMapping("/status/{status}")

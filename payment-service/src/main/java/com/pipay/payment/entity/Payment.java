@@ -22,8 +22,8 @@ public class Payment {
 
     @Id
     private String paymentId;
-    private String accountId;
-    private String recipientAccountId;
+    private String accountNumber;
+    private String recipientAccountNumber;
     private BigDecimal amount;
     private String currency;
     private PaymentMethod paymentMethod;

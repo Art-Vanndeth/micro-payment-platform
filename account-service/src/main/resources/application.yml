@@ -1,55 +1,10 @@
 spring:
   application:
     name: account-service
-
-  datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/payment_platform
-    username: payment_user
-    password: payment_password
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 0
-
-  # Redis Configuration
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-      password: redis_password
-      timeout: 2000ms
-      database: 0
-      jedis:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-          max-wait: -1ms
-
-  # Session Configuration
-  session:
-    store-type: redis
-    redis:
-      namespace: account-service:session
-    timeout: 30m
-
-  # Cache Configuration
-  cache:
-    type: redis
-    redis:
-      time-to-live: 600000  # 10 minutes
-      cache-null-values: false
-
-server:
-  port: 8090
+  profiles:
+    active: dev
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://127.0.0.1:8889}

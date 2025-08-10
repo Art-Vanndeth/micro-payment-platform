@@ -10,11 +10,11 @@ import java.math.BigDecimal;
 
 public interface AccountService {
 
-    BalanceCheckResponse checkBalance(String accountId, BigDecimal amount);
-    BalanceResponse getBalance(String accountId);
-    AccountResponse freezeAccount(String accountId);
-    AccountResponse unfreezeAccount(String accountId);
-    AccountValidationResponse validateAccount(String accountId);
-    TransferResponse processTransfer(String sourceAccountId, String recipientAccountId, BigDecimal amount);
+    BalanceCheckResponse checkBalance(String accountNumber, BigDecimal amount);
+    BalanceResponse getBalance(String accountNumber);
+    AccountResponse freezeAccount(String accountNumber);
+    AccountResponse unfreezeAccount(String accountNumber);
+    AccountValidationResponse validateAccount(String accountNumber);
+    TransferResponse processTransfer(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount);
 
 }

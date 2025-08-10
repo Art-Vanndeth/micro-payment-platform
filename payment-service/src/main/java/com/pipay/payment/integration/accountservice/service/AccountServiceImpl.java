@@ -23,16 +23,16 @@ public class AccountServiceImpl implements AccountService {
     private final AccountServiceHelper accountServiceHelper;
 
     @Override
-    public Mono<BalanceCheckResponse> checkBalance(String accountId, BigDecimal amount) {
-        return accountServiceHelper.checkBalance(accountId, amount)
+    public Mono<BalanceCheckResponse> checkBalance(String accountNumber, BigDecimal amount) {
+        return accountServiceHelper.checkBalance(accountNumber, amount)
                 .flatMap(response -> {
-                    if (response.getAccountId().equals(accountId)) {
+                    if (response.getAccountNumber().equals(accountNumber)) {
                         // Convert String to AccountStatus enum if needed
                         AccountStatus accountStatus = convertToAccountStatus(response.getAccountStatus());
 
                         if (response.getAvailableBalance().compareTo(amount) >= 0) {
                             BalanceCheckResponse account = BalanceCheckResponse.builder()
-                                    .accountId(response.getAccountId())
+                                    .accountNumber(response.getAccountNumber())
                                     .availableBalance(response.getAvailableBalance())
                                     .currentBalance(response.getCurrentBalance())
                                     .sufficientFunds(true)
@@ -41,9 +41,9 @@ public class AccountServiceImpl implements AccountService {
                                     .build();
                             return Mono.just(account);
                         } else {
-                            log.warn("Insufficient funds for account: {}", accountId);
+                            log.warn("Insufficient funds for account: {}", accountNumber);
                             return Mono.just(BalanceCheckResponse.builder()
-                                    .accountId(response.getAccountId())
+                                    .accountNumber(response.getAccountNumber())
                                     .availableBalance(response.getAvailableBalance())
                                     .currentBalance(response.getCurrentBalance())
                                     .sufficientFunds(false)
@@ -52,7 +52,7 @@ public class AccountServiceImpl implements AccountService {
                                     .build());
                         }
                     } else {
-                        log.warn("Account not found for accountId: {}", accountId);
+                        log.warn("Account not found for accountNumber: {}", accountNumber);
                         return Mono.error(new CustomException(ACCOUNT_NOT_FOUND));
                     }
                 })
@@ -62,18 +62,18 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Mono<AccountValidationResponse> validateRecipientAccount(String recipientAccountId) {
-        log.info("Validating recipient account: {}", recipientAccountId);
+    public Mono<AccountValidationResponse> validateRecipientAccount(String recipientAccountNumber) {
+        log.info("Validating recipient account: {}", recipientAccountNumber);
 
-        return accountServiceHelper.validateAccount(recipientAccountId)
+        return accountServiceHelper.validateAccount(recipientAccountNumber)
                 .map(response -> {
-                    boolean isValid = response.getAccountId() != null &&
+                    boolean isValid = response.getAccountNumber() != null &&
                                     response.getAccountStatus() != null;
 
                     String message = isValid ? "Account is valid" : "Account not found or invalid";
 
                     return AccountValidationResponse.builder()
-                            .accountId(response.getAccountId())
+                            .accountNumber(response.getAccountNumber())
                             .isValid(isValid)
                             .accountStatus(response.getAccountStatus())
                             .accountType(response.getAccountType())
@@ -81,7 +81,7 @@ public class AccountServiceImpl implements AccountService {
                             .build();
                 })
                 .onErrorReturn(AccountValidationResponse.builder()
-                        .accountId(recipientAccountId)
+                        .accountNumber(recipientAccountNumber)
                         .isValid(false)
                         .message("Account validation failed")
                         .errorCode("VALIDATION_ERROR")
@@ -89,11 +89,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Mono<Boolean> processAccountDeduction(String sourceAccountId, String recipientAccountId, BigDecimal amount) {
+    public Mono<Boolean> processAccountDeduction(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount) {
         log.info("Processing account deduction from {} to {} for amount: {}",
-                sourceAccountId, recipientAccountId, amount);
+                sourceAccountNumber, recipientAccountNumber, amount);
 
-        return accountServiceHelper.processTransfer(sourceAccountId, recipientAccountId, amount)
+        return accountServiceHelper.processTransfer(sourceAccountNumber, recipientAccountNumber, amount)
                 .map(response -> {
                     boolean success = response != null && response.isSuccess();
                     log.info("Account deduction result: {}", success ? "SUCCESS" : "FAILED");
@@ -109,20 +109,22 @@ public class AccountServiceImpl implements AccountService {
      * Converts AccountStatus from the response (which might be a String) to the enum
      */
     private AccountStatus convertToAccountStatus(Object accountStatusObj) {
-        if (accountStatusObj == null) {
-            return AccountStatus.INACTIVE;
-        }
-
-        if (accountStatusObj instanceof AccountStatus) {
-            return (AccountStatus) accountStatusObj;
-        }
-
-        if (accountStatusObj instanceof String) {
-            try {
-                return AccountStatus.valueOf((String) accountStatusObj);
-            } catch (IllegalArgumentException e) {
-                log.warn("Unknown account status: {}, defaulting to INACTIVE", accountStatusObj);
+        switch (accountStatusObj) {
+            case null -> {
                 return AccountStatus.INACTIVE;
+            }
+            case AccountStatus accountStatus -> {
+                return accountStatus;
+            }
+            case String s -> {
+                try {
+                    return AccountStatus.valueOf(s);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Unknown account status: {}, defaulting to INACTIVE", accountStatusObj);
+                    return AccountStatus.INACTIVE;
+                }
+            }
+            default -> {
             }
         }
 

@@ -26,38 +26,38 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @PostMapping("/{accountId}/balance-check")
+    @PostMapping("/{accountNumber}/balance-check")
     public ResponseEntity<BalanceCheckResponse> checkBalance(
-            @PathVariable String accountId,
+            @PathVariable String accountNumber,
             @RequestBody Map<String, BigDecimal> request) {
 
         BigDecimal amount = request.get("amount");
-        BalanceCheckResponse response = accountService.checkBalance(accountId, amount);
+        BalanceCheckResponse response = accountService.checkBalance(accountNumber, amount);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{accountId}/balance")
-    public ResponseEntity<BalanceResponse> getBalance(@PathVariable String accountId) {
-        BalanceResponse response = accountService.getBalance(accountId);
+    @GetMapping("/{accountNumber}/balance")
+    public ResponseEntity<BalanceResponse> getBalance(@PathVariable String accountNumber) {
+        BalanceResponse response = accountService.getBalance(accountNumber);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{accountId}/freeze")
-    public ResponseEntity<AccountResponse> freezeAccount(@PathVariable String accountId) {
-        AccountResponse response = accountService.freezeAccount(accountId);
+    @PatchMapping("/{accountNumber}/freeze")
+    public ResponseEntity<AccountResponse> freezeAccount(@PathVariable String accountNumber) {
+        AccountResponse response = accountService.freezeAccount(accountNumber);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{accountId}/unfreeze")
-    public ResponseEntity<AccountResponse> unfreezeAccount(@PathVariable String accountId) {
-        AccountResponse response = accountService.unfreezeAccount(accountId);
+    @PatchMapping("/{accountNumber}/unfreeze")
+    public ResponseEntity<AccountResponse> unfreezeAccount(@PathVariable String accountNumber) {
+        AccountResponse response = accountService.unfreezeAccount(accountNumber);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{accountId}/validate")
-    public ResponseEntity<AccountValidationResponse> validateAccount(@PathVariable String accountId) {
-        log.info("Validating account: {}", accountId);
-        AccountValidationResponse response = accountService.validateAccount(accountId);
+    @GetMapping("/{accountNumber}/validate")
+    public ResponseEntity<AccountValidationResponse> validateAccount(@PathVariable String accountNumber) {
+        log.info("Validating account: {}", accountNumber);
+        AccountValidationResponse response = accountService.validateAccount(accountNumber);
         return ResponseEntity.ok(response);
     }
 
@@ -65,11 +65,11 @@ public class AccountController {
     public ResponseEntity<TransferResponse> processTransfer(@RequestBody Map<String, Object> request) {
         log.info("Processing transfer request: {}", request);
 
-        String sourceAccountId = (String) request.get("sourceAccountId");
-        String recipientAccountId = (String) request.get("recipientAccountId");
+        String sourceAccountNumber = (String) request.get("sourceAccountNumber");
+        String recipientAccountNumber = (String) request.get("recipientAccountNumber");
         BigDecimal amount = new BigDecimal(request.get("amount").toString());
 
-        TransferResponse response = accountService.processTransfer(sourceAccountId, recipientAccountId, amount);
+        TransferResponse response = accountService.processTransfer(sourceAccountNumber, recipientAccountNumber, amount);
         return ResponseEntity.ok(response);
     }
 }

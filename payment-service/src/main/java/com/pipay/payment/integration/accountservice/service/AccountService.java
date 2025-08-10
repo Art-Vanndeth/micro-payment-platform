@@ -7,9 +7,9 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 public interface AccountService {
-    Mono<BalanceCheckResponse> checkBalance(String accountId, BigDecimal amount);
+    Mono<BalanceCheckResponse> checkBalance(String accountNumber, BigDecimal amount);
 
-    Mono<AccountValidationResponse> validateRecipientAccount(String recipientAccountId);
+    Mono<AccountValidationResponse> validateRecipientAccount(String recipientAccountNumber);
 
-    Mono<Boolean> processAccountDeduction(String sourceAccountId, String recipientAccountId, BigDecimal amount);
+    Mono<Boolean> processAccountDeduction(String sourceAccountNumber, String recipientAccountNumber, BigDecimal amount);
 }

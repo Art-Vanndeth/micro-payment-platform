@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransferResponse {
     private String transactionId;
-    private String sourceAccountId;
-    private String recipientAccountId;
+    private String sourceAccountNumber;
+    private String recipientAccountNumber;
     private BigDecimal amount;
     private String currency;
     private boolean success;

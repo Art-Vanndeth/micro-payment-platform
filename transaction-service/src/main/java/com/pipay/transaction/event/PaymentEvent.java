@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PaymentEvent {
     private String paymentId;
-    private String accountId;
-    private String recipientAccountId;
+    private String accountNumber;
+    private String recipientAccountNumber;
     private BigDecimal amount;
     private String currency;
     private String paymentMethod;

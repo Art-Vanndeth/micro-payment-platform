@@ -6,8 +6,8 @@ db.transactions.insertOne({
     "_id": "txn_001_credit_2025",
     "transactionId": "txn_001_credit_2025",
     "paymentId": "pay_12345_001",
-    "fromAccountId": "acc_sender_001",
-    "toAccountId": "acc_recipient_001",
+    "fromAccountNumber": "acc_sender_001",
+    "toAccountNumber": "acc_recipient_001",
     "amount": NumberDecimal("150.00"),
     "currency": "USD",
     "transactionType": "CREDIT",
@@ -32,8 +32,8 @@ db.transactions.insertOne({
     "_id": "txn_001_debit_2025",
     "transactionId": "txn_001_debit_2025",
     "paymentId": "pay_12345_001",
-    "fromAccountId": "acc_sender_001",
-    "toAccountId": "acc_recipient_001",
+    "fromAccountNumber": "acc_sender_001",
+    "toAccountNumber": "acc_recipient_001",
     "amount": NumberDecimal("152.50"),
     "currency": "USD",
     "transactionType": "DEBIT",
@@ -58,8 +58,8 @@ db.transactions.insertOne({
     "_id": "txn_002_failed_2025",
     "transactionId": "txn_002_failed_2025",
     "paymentId": "pay_12346_002",
-    "fromAccountId": "acc_sender_002",
-    "toAccountId": "acc_recipient_002",
+    "fromAccountNumber": "acc_sender_002",
+    "toAccountNumber": "acc_recipient_002",
     "amount": NumberDecimal("500.00"),
     "currency": "EUR",
     "transactionType": "DEBIT",
@@ -84,8 +84,8 @@ db.transactions.insertOne({
     "_id": "txn_003_pending_2025",
     "transactionId": "txn_003_pending_2025",
     "paymentId": "pay_12347_003",
-    "fromAccountId": "acc_sender_003",
-    "toAccountId": "acc_recipient_003",
+    "fromAccountNumber": "acc_sender_003",
+    "toAccountNumber": "acc_recipient_003",
     "amount": NumberDecimal("75.25"),
     "currency": "GBP",
     "transactionType": "CREDIT",
@@ -110,8 +110,8 @@ db.transactions.insertMany([
         "_id": "txn_004_batch_2025",
         "transactionId": "txn_004_batch_2025",
         "paymentId": "pay_batch_001",
-        "fromAccountId": "acc_corporate_001",
-        "toAccountId": "acc_employee_001",
+        "fromAccountNumber": "acc_corporate_001",
+        "toAccountNumber": "acc_employee_001",
         "amount": NumberDecimal("2500.00"),
         "currency": "USD",
         "transactionType": "CREDIT",
@@ -134,8 +134,8 @@ db.transactions.insertMany([
         "_id": "txn_005_batch_2025",
         "transactionId": "txn_005_batch_2025",
         "paymentId": "pay_batch_002",
-        "fromAccountId": "acc_corporate_001",
-        "toAccountId": "acc_employee_002",
+        "fromAccountNumber": "acc_corporate_001",
+        "toAccountNumber": "acc_employee_002",
         "amount": NumberDecimal("3000.00"),
         "currency": "USD",
         "transactionType": "CREDIT",
@@ -158,14 +158,14 @@ db.transactions.insertMany([
 
 // 6. Create indexes for better query performance
 db.transactions.createIndex({ "paymentId": 1 });
-db.transactions.createIndex({ "fromAccountId": 1 });
-db.transactions.createIndex({ "toAccountId": 1 });
+db.transactions.createIndex({ "fromAccountNumber": 1 });
+db.transactions.createIndex({ "toAccountNumber": 1 });
 db.transactions.createIndex({ "status": 1 });
 db.transactions.createIndex({ "transactionType": 1 });
 db.transactions.createIndex({ "createdAt": -1 });
 db.transactions.createIndex({ "gatewayTransactionId": 1 }, { unique: true });
-db.transactions.createIndex({ "fromAccountId": 1, "status": 1 });
-db.transactions.createIndex({ "toAccountId": 1, "status": 1 });
+db.transactions.createIndex({ "fromAccountNumber": 1, "status": 1 });
+db.transactions.createIndex({ "toAccountNumber": 1, "status": 1 });
 
 // 7. Query examples to verify the data
 // Find all transactions for a specific payment
@@ -177,8 +177,8 @@ db.transactions.find({ "status": "COMPLETED" });
 // Find all transactions for a specific account (either sender or receiver)
 db.transactions.find({
     $or: [
-        { "fromAccountId": "acc_sender_001" },
-        { "toAccountId": "acc_sender_001" }
+        { "fromAccountNumber": "acc_sender_001" },
+        { "toAccountNumber": "acc_sender_001" }
     ]
 });
 

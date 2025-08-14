@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
@@ -19,6 +21,12 @@ import reactor.core.publisher.Mono;
 public class TransactionController {
 
     private final TransactionService transactionService;
+
+    @GetMapping
+    public Mono<List<Transaction>> getAllTransactions() {
+        log.info("Received request to get all transactions");
+        return transactionService.getAllTransactions();
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="account-service" target="21" />
+      <module name="account-service.main" target="21" />
+      <module name="account-service.test" target="21" />
+      <module name="api-gateway" target="21" />
+      <module name="api-gateway.main" target="21" />
+      <module name="api-gateway.test" target="21" />
+      <module name="config-server" target="21" />
+      <module name="config-server.main" target="21" />
+      <module name="config-server.test" target="21" />
+      <module name="eureka-server" target="21" />
+      <module name="eureka-server.main" target="21" />
+      <module name="eureka-server.test" target="21" />
+      <module name="notification-service" target="21" />
+      <module name="notification-service.main" target="21" />
+      <module name="notification-service.test" target="21" />
+      <module name="payment-service" target="21" />
+      <module name="payment-service.main" target="21" />
+      <module name="payment-service.test" target="21" />
+      <module name="transaction-service" target="21" />
+      <module name="transaction-service.main" target="21" />
+      <module name="transaction-service.test" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="account-service" options="-parameters" />
+      <module name="account-service.main" options="-parameters" />
+      <module name="account-service.test" options="-parameters" />
+      <module name="api-gateway" options="-parameters" />
+      <module name="api-gateway.main" options="-parameters" />
+      <module name="api-gateway.test" options="-parameters" />
+      <module name="config-server" options="-parameters" />
+      <module name="config-server.main" options="-parameters" />
+      <module name="config-server.test" options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
+      <module name="eureka-server.main" options="-parameters" />
+      <module name="eureka-server.test" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
+      <module name="notification-service.main" options="-parameters" />
+      <module name="notification-service.test" options="-parameters" />
+      <module name="payment-service" options="-parameters" />
+      <module name="payment-service.main" options="-parameters" />
+      <module name="payment-service.test" options="-parameters" />
+      <module name="transaction-service" options="-parameters" />
+      <module name="transaction-service.main" options="-parameters" />
+      <module name="transaction-service.test" options="-parameters" />
+    </option>
+  </component>
+</project>

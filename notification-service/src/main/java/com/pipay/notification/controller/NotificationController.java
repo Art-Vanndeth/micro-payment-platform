@@ -25,9 +25,9 @@ public class NotificationController {
         notificationService.markNotificationAsRead(id, read);
     }
 
-    @PutMapping("/{id}/mark-all-read")
-    public void updateAllNotificationsStatus(@PathVariable String id) {
-        notificationService.markAllNotificationsAsRead(id);
+    @PutMapping("/mark-all-read")
+    public void updateAllNotificationsStatus() {
+        notificationService.markAllNotificationsAsRead();
     }
 
     @DeleteMapping("/{id}")

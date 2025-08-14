@@ -30,7 +30,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void markAllNotificationsAsRead(String id) {
+    public void markAllNotificationsAsRead() {
         List<Notification> notifications = notificationRepository.findAll();
         notifications.forEach(notification -> {
             notification.setIsRead(true);

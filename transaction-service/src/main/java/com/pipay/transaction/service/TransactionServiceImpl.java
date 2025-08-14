@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -30,6 +31,14 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Override
+    public Mono<List<Transaction>> getAllTransactions() {
+        return transactionRepository.findAll()
+                .collectList()
+                .doOnSuccess(transactions -> log.info("Retrieved {} transactions", transactions.size()))
+                .doOnError(error -> log.error("Error retrieving transactions: {}", error.getMessage()));
+    }
 
     @Override
     public Mono<Transaction> createTransaction(CreateTransactionRequest request) {

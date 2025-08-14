@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws")
-                .setAllowedOrigins("http://127.0.0.1:8888/", "http://127.0.0.1:8095/")  // Be more specific in production
+                .setAllowedOrigins("http://127.0.0.1:8888", "http://127.0.0.1:3000", "http://127.0.0.1:3001") // Allow gateway origin
                 .withSockJS();
     }
 
@@ -31,32 +31,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setSendBufferSizeLimit(8192) // Buffer size limit
                 .setSendTimeLimit(10000); // Time limit to send a message in milliseconds
     }
-
-
-
-
-
-//    @Override
-//    public void configureMessageBroker(MessageBrokerRegistry config) {
-//        // Enable a simple message broker for in-memory message handling
-//        config.enableSimpleBroker("/topic", "/queue");
-//
-//        // Set application destination prefix for client messages
-//        config.setApplicationDestinationPrefixes("/app");
-//
-//        // Set user destination prefix for private messages
-//        config.setUserDestinationPrefix("/user");
-//    }
-//
-//    @Override
-//    public void registerStompEndpoints(StompEndpointRegistry registry) {
-//        // Register STOMP endpoint for WebSocket connections
-//        registry.addEndpoint("/ws/admin")
-//                .setAllowedOriginPatterns("*")
-//                .withSockJS();
-//
-//        // Register endpoint without SockJS for direct WebSocket connections
-//        registry.addEndpoint("/ws/admin")
-//                .setAllowedOriginPatterns("*");
-//    }
 }

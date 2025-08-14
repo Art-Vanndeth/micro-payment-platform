@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: com.ongres.stringprep:stringprep:1.1" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="com.ongres.stringprep" artifactId="stringprep" version="1.1" baseVersion="1.1" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ongres.stringprep/stringprep/1.1/9149e6d6f97be4c2b641c89ea569cb4fde872972/stringprep-1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

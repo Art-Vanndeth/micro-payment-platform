@@ -7,7 +7,14 @@ import com.pipay.transaction.event.PaymentEvent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 public interface TransactionService {
+
+    /**
+     * Retrieves all transactions
+     */
+    Mono<List<Transaction>> getAllTransactions();
 
     /**
      * Creates a new transaction with proper validation and business logic

@@ -7,7 +7,7 @@ import java.util.List;
 public interface NotificationService {
     List<Notification> getAllNotifications();
     void markNotificationAsRead(String id, Boolean read);
-    void markAllNotificationsAsRead(String id);
+    void markAllNotificationsAsRead();
     void removeNotification(String id);
 
 }

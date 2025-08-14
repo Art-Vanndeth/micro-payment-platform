@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -45,6 +46,23 @@ public class AccountServiceImpl implements AccountService {
             return amount.multiply(EXCHANGE_RATE);
         }
         return amount;
+    }
+
+
+    @Override
+    public List<AccountResponse> getAccountList() {
+        return accountRepository.findAll()
+                .stream()
+                .map(account -> AccountResponse.builder()
+                        .accountId(account.getAccountId())
+                        .accountNumber(account.getAccountNumber())
+                        .status(account.getStatus())
+                        .type(account.getAccountType())
+                        .currency(account.getCurrency())
+                        .updatedAt(account.getUpdatedAt())
+                        .message("Account retrieved successfully")
+                        .build())
+                .toList();
     }
 
     @Override

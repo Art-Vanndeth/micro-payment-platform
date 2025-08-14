@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -24,6 +25,13 @@ public class AccountController {
 
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AccountResponse>> getAccountList() {
+        log.info("Fetching account list");
+        List<AccountResponse> accountList = accountService.getAccountList();
+        return ResponseEntity.ok(accountList);
     }
 
     @PostMapping("/{accountNumber}/balance-check")

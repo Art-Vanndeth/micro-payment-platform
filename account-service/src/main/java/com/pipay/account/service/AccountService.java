@@ -7,9 +7,11 @@ import com.pipay.account.dto.AccountValidationResponse;
 import com.pipay.account.dto.TransferResponse;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface AccountService {
 
+    List<AccountResponse> getAccountList();
     BalanceCheckResponse checkBalance(String accountNumber, BigDecimal amount);
     BalanceResponse getBalance(String accountNumber);
     AccountResponse freezeAccount(String accountNumber);

@@ -45,7 +45,8 @@ public class GlobalExceptionHandler {
     private HttpStatus mapToHttpStatus(ErrorCode code) {
         return switch (code) {
             case ACCOUNT_NOT_FOUND -> HttpStatus.NOT_FOUND;
-            case VALIDATION_ERROR -> HttpStatus.BAD_REQUEST;
+            case UNSUPPORTED_CURRENCY, VALIDATION_ERROR, INSUFFICIENT_FUNDS, RECIPIENT_ACCOUNT_INACTIVE,
+                 RECIPIENT_ACCOUNT_INVALID, SOURCE_ACCOUNT_INACTIVE -> HttpStatus.BAD_REQUEST;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }

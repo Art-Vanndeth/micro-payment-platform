@@ -5,31 +5,34 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
-import org.springframework.web.reactive.config.CorsRegistry;
-import org.springframework.web.reactive.config.WebFluxConfigurer;
+
+import java.util.Arrays;
 
 @Configuration
-public class WebFluxCorsConfig implements WebFluxConfigurer {
+public class WebFluxCorsConfig {
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:3000") // Frontend URL
-                .allowedMethods("GET", "POST", "OPTIONS")
-                .allowedHeaders("Content-Type", "Authorization")
-                .allowCredentials(true);
-    }
-
+    // Keeping this as a backup configuration source
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000"); // Frontend URL
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Use allowedOriginPatterns for better compatibility with credentials
+        config.setAllowedOriginPatterns(Arrays.asList("*"));
+
+        // Explicitly allow all HTTP methods including OPTIONS
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+
+        // Allow all headers
+        config.setAllowedHeaders(Arrays.asList("*"));
+
+        // Allow credentials
+        config.setAllowCredentials(true);
+
+        // Cache preflight response for 1 hour
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }

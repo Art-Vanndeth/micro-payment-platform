@@ -38,6 +38,10 @@ public class Transaction {
     private String paymentId;
 
     @NotNull
+    @NotBlank
+    private String paymentMethod;
+
+    @NotNull
     @Indexed
     private String fromAccountNumber;
 

@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws")
-                .setAllowedOrigins("http://127.0.0.1:8888", "http://127.0.0.1:3000", "http://127.0.0.1:3001") // Allow gateway origin
+                .setAllowedOriginPatterns("*")// Allow all origins for gateway routing
                 .withSockJS();
     }
 
@@ -27,8 +27,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
-        registration.setMessageSizeLimit(8192) // Message size limit
-                .setSendBufferSizeLimit(8192) // Buffer size limit
-                .setSendTimeLimit(10000); // Time limit to send a message in milliseconds
+        registration.setMessageSizeLimit(8192)
+                .setSendBufferSizeLimit(8192)
+                .setSendTimeLimit(10000);
     }
 }

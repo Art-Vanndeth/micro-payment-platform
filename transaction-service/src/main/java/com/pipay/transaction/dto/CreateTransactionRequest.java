@@ -25,6 +25,11 @@ public class CreateTransactionRequest {
 
     @NotNull
     @NotBlank
+    private String paymentMethod;
+
+
+    @NotNull
+    @NotBlank
     private String fromAccountNumber;
 
     @NotNull

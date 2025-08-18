@@ -10,7 +10,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -20,12 +19,12 @@ public class NotificationController {
         return notificationService.getAllNotifications();
     }
 
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     public void updateNotificationStatus(@PathVariable String id, @RequestParam Boolean read) {
         notificationService.markNotificationAsRead(id, read);
     }
 
-    @PutMapping("/mark-all-read")
+    @PatchMapping("/mark-all-read")
     public void updateAllNotificationsStatus() {
         notificationService.markAllNotificationsAsRead();
     }

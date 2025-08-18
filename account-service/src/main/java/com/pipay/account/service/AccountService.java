@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface AccountService {
 
+    AccountResponse getAccountDetails(String accountNumber);
     List<AccountResponse> getAccountList();
     BalanceCheckResponse checkBalance(String accountNumber, BigDecimal amount);
     BalanceResponse getBalance(String accountNumber);

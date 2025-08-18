@@ -48,14 +48,32 @@ public class AccountServiceImpl implements AccountService {
         return amount;
     }
 
+    @Override
+    public AccountResponse getAccountDetails(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
+                .map(account -> AccountResponse.builder()
+                        .accountNumber(account.getAccountNumber())
+                        .accountHolderName(account.getAccountHolderName())
+                        .balance(account.getBalance())
+                        .availableBalance(account.getAvailableBalance())
+                        .status(account.getStatus())
+                        .type(account.getAccountType())
+                        .currency(account.getCurrency())
+                        .updatedAt(account.getUpdatedAt())
+                        .message("Account retrieved successfully")
+                        .build())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: " + accountNumber));
+    }
 
     @Override
     public List<AccountResponse> getAccountList() {
         return accountRepository.findAll()
                 .stream()
                 .map(account -> AccountResponse.builder()
-                        .accountId(account.getAccountId())
                         .accountNumber(account.getAccountNumber())
+                        .accountHolderName(account.getAccountHolderName())
+                        .balance(account.getBalance())
+                        .availableBalance(account.getAvailableBalance())
                         .status(account.getStatus())
                         .type(account.getAccountType())
                         .currency(account.getCurrency())

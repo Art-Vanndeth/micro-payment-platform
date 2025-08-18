@@ -27,6 +27,13 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+    @GetMapping("/{accountNumber}")
+    public ResponseEntity<AccountResponse> getAccountDetails(@PathVariable String accountNumber) {
+        log.info("Fetching details for account: {}", accountNumber);
+        AccountResponse accountResponse = accountService.getAccountDetails(accountNumber);
+        return ResponseEntity.ok(accountResponse);
+    }
+
     @GetMapping
     public ResponseEntity<List<AccountResponse>> getAccountList() {
         log.info("Fetching account list");

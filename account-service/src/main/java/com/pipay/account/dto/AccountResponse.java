@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,8 +15,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountResponse {
-    private String accountId;
     private String accountNumber;
+    private String accountHolderName;
+    private BigDecimal balance;
+    private BigDecimal availableBalance;
     private AccountStatus status;
     private AccountType type;
     private String currency;

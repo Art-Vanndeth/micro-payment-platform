@@ -64,12 +64,12 @@ public class NotificationConsumer {
     }
 
     private void saveAndSendNotification(Notification notification) {
-
         notification = notificationRepository.save(notification);
         simpMessagingTemplate.convertAndSend(
-                "/topic/notifications/",
+                "/topic/notifications",
                 notification
         );
+        log.info("NOTIFICATION: {}", notification);
     }
 
 }

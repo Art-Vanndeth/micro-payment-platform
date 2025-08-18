@@ -49,22 +49,22 @@ public class TransactionServiceImpl implements TransactionService {
             String transactionId = generateTransactionId();
 
             // Build transaction entity
-            Transaction transaction = Transaction.builder()
-                    .transactionId(transactionId)
-                    .paymentId(request.getPaymentId())
-                    .fromAccountNumber(request.getFromAccountNumber())
-                    .toAccountNumber(request.getToAccountNumber())
-                    .amount(request.getAmount())
-                    .currency(request.getCurrency().toUpperCase())
-                    .transactionType(request.getTransactionType())
-                    .status(TransactionStatus.INITIATED)
-                    .description(request.getDescription())
-                    .gatewayTransactionId(request.getGatewayTransactionId())
-                    .createdBy("system")
-                    .metadata(request.getMetadata() != null ? request.getMetadata() : new HashMap<>())
-                    .build();
 
-            return transaction;
+                    return Transaction.builder()
+                            .transactionId(transactionId)
+                            .paymentId(request.getPaymentId())
+                            .paymentMethod(request.getPaymentMethod())
+                            .fromAccountNumber(request.getFromAccountNumber())
+                            .toAccountNumber(request.getToAccountNumber())
+                            .amount(request.getAmount())
+                            .currency(request.getCurrency().toUpperCase())
+                            .transactionType(request.getTransactionType())
+                            .status(TransactionStatus.COMPLETED)
+                            .description(request.getDescription())
+                            .gatewayTransactionId(request.getGatewayTransactionId())
+                            .createdBy("system")
+                            .metadata(request.getMetadata() != null ? request.getMetadata() : new HashMap<>())
+                            .build();
         })
                 .flatMap(this::validateTransaction)
                 .flatMap(this::saveTransaction)
@@ -82,13 +82,15 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction debitTransaction = Transaction.builder()
                 .transactionId(UUID.randomUUID().toString())
                 .paymentId(paymentEvent.getPaymentId())
+                .paymentMethod(paymentEvent.getPaymentMethod())
                 .fromAccountNumber(paymentEvent.getAccountNumber())
                 .toAccountNumber(paymentEvent.getRecipientAccountNumber())
                 .amount(paymentEvent.getAmount())
                 .currency(paymentEvent.getCurrency())
                 .transactionType(TransactionType.DEBIT)
-                .status(TransactionStatus.INITIATED)
+                .status(TransactionStatus.COMPLETED)
                 .description(paymentEvent.getDescription())
+                .transactionReference(paymentEvent.getTransactionReference())
                 .createdBy("payment-service")
                 .build();
 
@@ -102,13 +104,15 @@ public class TransactionServiceImpl implements TransactionService {
                     Transaction creditTransaction = Transaction.builder()
                             .transactionId(UUID.randomUUID().toString())
                             .paymentId(paymentEvent.getPaymentId())
+                            .paymentMethod(paymentEvent.getPaymentMethod())
                             .fromAccountNumber(paymentEvent.getAccountNumber())
                             .toAccountNumber(paymentEvent.getRecipientAccountNumber())
                             .amount(paymentEvent.getAmount())
                             .currency(paymentEvent.getCurrency())
                             .transactionType(TransactionType.CREDIT)
-                            .status(TransactionStatus.INITIATED)
+                            .status(TransactionStatus.COMPLETED)
                             .description(paymentEvent.getDescription())
+                            .transactionReference(paymentEvent.getTransactionReference())
                             .createdBy("payment-service")
                             .build();
 
@@ -186,7 +190,7 @@ public class TransactionServiceImpl implements TransactionService {
     public Mono<Transaction> processTransaction(String transactionId) {
         return getTransactionById(transactionId)
                 .flatMap(transaction -> {
-                    if (transaction.getStatus() != TransactionStatus.INITIATED) {
+                    if (transaction.getStatus() != TransactionStatus.COMPLETED) {
                         return Mono.error(new RuntimeException("Transaction cannot be processed in current status: " + transaction.getStatus()));
                     }
 

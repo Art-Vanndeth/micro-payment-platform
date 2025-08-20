@@ -1,54 +1,59 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-# Wait for Vault to be ready
-echo "Waiting for Vault to be ready..."
-sleep 10
+# =========================
+# Vault Init Secrets Script
+# =========================
+VAULT_ADDR=${VAULT_ADDR:-http://localhost:8200}
+VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN_ID:-dev-root-token}
 
-# Set Vault address
-export VAULT_ADDR=http://localhost:8200
-export VAULT_TOKEN=dev-root-token
+echo ">> Waiting a bit for Vault to be ready..."
+sleep 5
 
-echo "Setting up Vault secrets for Payment Platform..."
+echo ">> Logging in"
+vault login $VAULT_TOKEN || true
 
-# Enable KV secrets engine
-vault secrets enable -path=payment kv-v2
+# =========================
+# Enable KV v2 secrets engine
+# =========================
+vault secrets enable -path=secret kv-v2 || true
 
-# Database secrets
-vault kv put payment/database \
-  postgres_user=payment_user \
-  postgres_password=payment_password \
-  postgres_url=jdbc:postgresql://postgres:5432/payment_platform \
-  mongo_user=mongo_user \
-  mongo_password=mongo_password \
-  redis_password=redis_password
+echo "==> Writing secrets into Vault..."
 
-# Application secrets
-vault kv put payment/account-service \
-  jwt_secret=account-service-jwt-secret-key-2024 \
-  encryption_key=account-service-encryption-key \
-  api_key=account-service-api-key
+# ===== DEV ENVIRONMENT =====
+vault kv put secret/dev/database \
+  POSTGRES_URL=jdbc:postgresql://localhost:5432/postgresdb \
+  POSTGRES_USERNAME=postgres \
+  POSTGRES_PASSWORD=postgres \
+  MONGO_URL=mongodb://mongo:mongo@localhost:27017/mongodb?authSource=admin \
+  REDIS_HOST="localhost:6379" \
+  REDIS_PASSWORD="redis_password"
 
-vault kv put payment/payment-service \
-  jwt_secret=payment-service-jwt-secret-key-2024 \
-  encryption_key=payment-service-encryption-key \
-  api_key=payment-service-api-key
+vault kv put secret/dev/kafka \
+  KAFKA_BOOTSTRAP_SERVERS=localhost:29092
 
-vault kv put payment/transaction-service \
-  jwt_secret=transaction-service-jwt-secret-key-2024 \
-  encryption_key=transaction-service-encryption-key \
-  api_key=transaction-service-api-key
+# ===== QA ENVIRONMENT =====
+vault kv put secret/qa/database \
+  POSTGRES_URL=jdbc:postgresql://localhost:5432/postgresdb \
+  POSTGRES_USERNAME=postgres \
+  POSTGRES_PASSWORD=postgres \
+  MONGO_URL=mongodb://mongo:mongo@localhost:27017/mongodb?authSource=admin \
+  REDIS_HOST="localhost:6379" \
+  REDIS_PASSWORD="redis_password"
 
-vault kv put payment/notification-service \
-  jwt_secret=notification-service-jwt-secret-key-2024 \
-  email_api_key=email-service-api-key \
-  sms_api_key=sms-service-api-key
+vault kv put secret/qa/kafka \
+  KAFKA_BOOTSTRAP_SERVERS=localhost:29092
 
-# External API secrets
-vault kv put payment/external-apis \
-  stripe_secret_key=sk_test_your_stripe_secret \
-  paypal_client_id=your_paypal_client_id \
-  paypal_client_secret=your_paypal_client_secret
+# ===== PROD ENVIRONMENT =====
+vault kv put secret/prod/database \
+  POSTGRES_URL=jdbc:postgresql://localhost:5432/postgresdb \
+  POSTGRES_USERNAME=postgres \
+  POSTGRES_PASSWORD=postgres \
+  MONGO_URL=mongodb://mongo:mongo@localhost:27017/mongodb?authSource=admin \
+  REDIS_HOST="localhost:6379" \
+  REDIS_PASSWORD="redis_password"
 
-echo "Vault secrets setup completed!"
-echo "Access Vault UI at: http://localhost:8200"
-echo "Root token: dev-root-token"
+vault kv put secret/prod/kafka \
+  KAFKA_BOOTSTRAP_SERVERS=localhost:29092
+
+echo ">> All secrets written."

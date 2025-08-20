@@ -2,7 +2,7 @@ spring:
   application:
     name: notification-service
   profiles:
-    active: dev
+    active: prod
   config:
     import: "configserver:"
   cloud:

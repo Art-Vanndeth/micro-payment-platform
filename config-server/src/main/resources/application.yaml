@@ -3,7 +3,7 @@ spring:
     name: config-server
 
   profiles:
-    active: git
+    active: git,vault
   cloud:
     config:
       server:
@@ -11,6 +11,13 @@ spring:
           uri: https://github.com/Art-Vanndeth/vault-micro-payment-platform-configuration.git
           search-paths: '/services/**'
           default-label: main
+        vault:
+          host: localhost
+          port: 8200
+          scheme: http
+          authentication: TOKEN
+          token: dev-root-token
+          kv-version: 2
 
 eureka:
   instance:

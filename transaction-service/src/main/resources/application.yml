@@ -2,7 +2,7 @@ spring:
   application:
     name: transaction-service
   profiles:
-    active: dev
+    active: prod
   config:
     import: "configserver:"
   cloud:

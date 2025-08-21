@@ -16,10 +16,9 @@ spring:
           port: 8200
           scheme: http
           authentication: TOKEN
-          token: token
+          token: dev-root-token
           kv-version: 2
           backend: config
-          profile-separator: '/'
 
 eureka:
   instance:

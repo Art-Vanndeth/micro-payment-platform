@@ -54,9 +54,9 @@ tasks.named('test') {
 
 // Flyway configuration
 flyway {
-	url = 'jdbc:postgresql://127.0.0.1:5432/payment_platform'
-	user = 'payment_user'
-	password = 'payment_password'
+	url = 'jdbc:postgresql://127.0.0.1:5432/postgresdb'
+	user = 'postgres'
+	password = 'postgres'
 	locations = ['classpath:db/migration']
 	baselineOnMigrate = true
 	baselineVersion = '0'

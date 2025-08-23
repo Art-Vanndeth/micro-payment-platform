@@ -87,4 +87,23 @@ public class AccountController {
         TransferResponse response = accountService.processTransfer(sourceAccountNumber, recipientAccountNumber, amount);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/total")
+    public ResponseEntity<Long> getTotalAccounts() {
+        Long totalAccounts = accountService.getTotalAccounts();
+        return ResponseEntity.ok(totalAccounts);
+    }
+
+    @GetMapping("/volume")
+    public ResponseEntity<Long> getTotalVolume() {
+        Long totalVolume = accountService.getTotalVolume();
+        return ResponseEntity.ok(totalVolume);
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<Long> getActiveAccounts() {
+        Long activeAccounts = accountService.getActiveAccounts();
+        return ResponseEntity.ok(activeAccounts);
+    }
+
 }

@@ -67,4 +67,15 @@ public class TransactionController {
     public Mono<Transaction> processTransaction(@PathVariable String transactionId) {
         return transactionService.processTransaction(transactionId);
     }
+
+    @GetMapping("/total")
+    public Mono<Long> getTotalTransactions() {
+        return transactionService.getTotalTransactions();
+    }
+
+    @GetMapping("/initiated")
+    public Mono<Long> getInitiateTransactions() {
+        return transactionService.getInitiateTransactions();
+    }
+
 }

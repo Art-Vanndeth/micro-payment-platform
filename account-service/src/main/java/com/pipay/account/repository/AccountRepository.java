@@ -26,4 +26,6 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     int updateBalance(@Param("accountNumber") String accountNumber,
                       @Param("amount") BigDecimal amount,
                       @Param("updatedAt") LocalDateTime updatedAt);
+
+    Long countByStatus(AccountStatus accountStatus);
 }

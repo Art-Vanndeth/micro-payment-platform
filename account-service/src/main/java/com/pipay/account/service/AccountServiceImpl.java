@@ -386,6 +386,25 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
+    @Override
+    public Long getTotalAccounts() {
+        return accountRepository.count();
+    }
+
+    @Override
+    public Long getTotalVolume() {
+        return accountRepository.findAll()
+                .stream()
+                .map(account -> convertToUSD(account.getBalance(), account.getCurrency()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .longValue();
+    }
+
+    @Override
+    public Long getActiveAccounts() {
+        return accountRepository.countByStatus(AccountStatus.ACTIVE);
+    }
+
     private TransferResponse createFailureTransferResponse(String transactionId, String sourceAccountNumber,
                                                            String recipientAccountNumber, BigDecimal amount,
                                                            String message, String errorCode) {

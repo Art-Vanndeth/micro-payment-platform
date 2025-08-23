@@ -57,4 +57,8 @@ public interface TransactionService {
      * Process transaction - involves external payment gateway calls
      */
     Mono<Transaction> processTransaction(String transactionId);
+
+    Mono<Long> getTotalTransactions();
+    Mono<Long> getInitiateTransactions();
+
 }

@@ -40,8 +40,7 @@ public class NotificationConsumer {
 
     public void handleTransactionEvent(TransactionEvent event) {
         Notification notification = buildNotification(
-                event.getTransactionId(),
-                "Transaction " + event.getEventType() + ": " + event.getStatus(),
+                event.getTransactionId(), event.getEventType() + ": " + event.getStatus(),
                 event.getStatus(),
                 System.currentTimeMillis(),
                 event.getEventType(),

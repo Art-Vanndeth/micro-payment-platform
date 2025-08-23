@@ -97,7 +97,7 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.save(debitTransaction)
                 .doOnSuccess(savedTransaction -> {
                     log.info("Debit transaction created successfully: {}", savedTransaction.getTransactionId());
-                    publishTransactionEvent(savedTransaction, "TRANSACTION_CREATED");
+                    publishTransactionEvent(savedTransaction, "New transaction has been created");
                 })
                 .flatMap(debitTx -> {
                     // Create credit transaction for recipient
@@ -148,7 +148,7 @@ public class TransactionServiceImpl implements TransactionService {
                 })
                 .doOnSuccess(updatedTransaction -> {
                     log.info("Transaction status updated successfully: {}", transactionId);
-                    publishTransactionEvent(updatedTransaction, "TRANSACTION_STATUS_UPDATED");
+                    publishTransactionEvent(updatedTransaction, "Transaction status updated to " + status);
                 })
                 .doOnError(error -> log.error("Error updating transaction status {}: {}", transactionId, error.getMessage()));
     }
@@ -201,6 +201,20 @@ public class TransactionServiceImpl implements TransactionService {
                 .flatMap(this::callPaymentGateway)
                 .doOnSuccess(transaction ->
                         log.info("Transaction processed: {}", transaction.getTransactionId()));
+    }
+
+    @Override
+    public Mono<Long> getTotalTransactions() {
+        return transactionRepository.count()
+                .doOnSuccess(count -> log.info("Total transactions count: {}", count))
+                .doOnError(error -> log.error("Error counting transactions: {}", error.getMessage()));
+    }
+
+    @Override
+    public Mono<Long> getInitiateTransactions() {
+        return transactionRepository.countByStatus(TransactionStatus.INITIATED)
+                .doOnSuccess(count -> log.info("Total initiated= transactions count: {}", count))
+                .doOnError(error -> log.error("Error counting initiated transactions: {}", error.getMessage()));
     }
 
     // Private helper methods

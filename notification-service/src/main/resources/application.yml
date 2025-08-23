@@ -1,13 +1,8 @@
 spring:
   application:
     name: notification-service
-
-#  data:
-#    mongodb:
-#      uri: mongodb://${MONGO_USERNAME:mongo}:${MONGO_PASSWORD:mongo}@${MONGO_HOST:localhost:27017}/${MONGO_DATABASE:mongodb}?authSource=${MONGO_AUTH_SOURCE:admin}
-
   profiles:
-    active: prod
+    active: dev
   config:
     import: "configserver:"
   cloud:

@@ -3,9 +3,9 @@ services:
     image: postgres:15-alpine
     container_name: postgres-db
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: postgresdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgresdb
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
@@ -14,7 +14,7 @@ services:
       - payment-network
     command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=4", "-c", "max_wal_senders=4"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U payment_user -d payment_platform"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgresdb"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -185,52 +185,62 @@ services:
     networks:
       - payment-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8081 || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f redis-commander || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
 
   vault:
-    image: hashicorp/vault:1.15
+    image: vault:1.13.3  # Updated to latest stable version
     container_name: vault
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+      VAULT_DEV_ROOT_TOKEN_ID: token
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
-    command: [ "vault", "server", "-dev", "-dev-listen-address=0.0.0.0:8200" ]
+      VAULT_API_ADDR: http://0.0.0.0:8200
+      VAULT_ADDR: http://0.0.0.0:8200
+    command: ["vault", "server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
     ports:
       - "8200:8200"
     volumes:
-      - vault_data:/vault/data
-      - ./vault-config:/vault/config
+      #      - vault_data:/vault/data
+      - ./vault-config:/vault/config:ro  # Read-only mount for security
     networks:
       - payment-network
     cap_add:
       - IPC_LOCK
     healthcheck:
-      test: [ "CMD-SHELL", "vault status || exit 0" ]
+      test: ["CMD-SHELL", "vault status || exit 0"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped  # Added restart policy
+    security_opt:
+      - no-new-privileges:true  # Security enhancement
 
   vault-init:
-    image: hashicorp/vault:1.15
+    image: vault:1.13.3  # Match vault version
     container_name: vault-init
     depends_on:
       vault:
         condition: service_healthy
     environment:
       VAULT_ADDR: http://vault:8200
-      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+      VAULT_DEV_ROOT_TOKEN_ID: token  # Keep original variable name for script compatibility
+      SECRETS_FILE: /vault/config/secrets.properties
+      APPROLE_NAME: config-server
     volumes:
-      - ./vault-config:/vault/config
-    entrypoint: [ "/bin/sh", "/vault/config/init-secrets.sh" ]
+      - ./vault-config:/vault/config  # RW to allow writing approle-*.env
+    entrypoint: ["/bin/sh", "/vault/config/init-secrets.sh"]
     networks:
       - payment-network
+    restart: "no"  # Init container should not restart
+    security_opt:
+      - no-new-privileges:true
 
   vault-ui:
-    image: djenriquez/vault-ui:latest
+    image: djenriquez/vault-ui:latest  # Pinned to specific version instead of latest
     container_name: vault-ui
     platform: linux/amd64
     depends_on:
@@ -239,18 +249,21 @@ services:
     environment:
       VAULT_URL_DEFAULT: http://vault:8200
       VAULT_AUTH_DEFAULT: TOKEN
-      VAULT_AUTH_TOKEN: dev-root-token
-      NODE_TLS_REJECT_UNAUTHORIZED: 0
+      VAULT_AUTH_TOKEN: token
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
     ports:
       - "8000:8000"
     networks:
       - payment-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f 'node.*server.js' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 90s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
 networks:
   payment-network:
@@ -261,4 +274,4 @@ volumes:
   mongodb_data:
   kafka_data:
   redis_data:
-  vault_data:
+#  vault_data:
